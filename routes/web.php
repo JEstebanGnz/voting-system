@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Socialite\Facades\Socialite;
@@ -108,7 +109,15 @@ Route::get('/googleTest', function () {
 
     $usersDB = \Illuminate\Support\Facades\DB::table('users')->get();
 
-
     return "Info actualizada correctamente";
+
+});
+
+Route::get('/insertAdmin', function () {
+
+   \Illuminate\Support\Facades\DB::table('users')->insert(['name' => 'Admin', 'email' => 'desarrolladorg3@unibague.edu.co',
+       'identification_number' => 12345,
+       'role_id' => 2, 'has_payment' => 0,
+       'password'=> Hash::make(12345)]);
 
 });
