@@ -88,12 +88,12 @@ Route::get('/googleTest', function () {
 
             \Illuminate\Support\Facades\DB::table('users')->updateOrInsert
             (
-                ['email' => $user['email']],
-                [   'identification_number' => $user['cc'],
-                    'name' => $user['name'],
+                ['email' => $user['Correo electrónico']],
+                [   'identification_number' => $user['Identificación (CC)'],
+                    'name' => $user['Nombre'],
                     'role_id' => 1,
                     'has_payment' => $user['Pago'] === 'Sí' ,
-                    'password' => \Illuminate\Support\Facades\Hash::make($user['cc'])
+                    'password' => \Illuminate\Support\Facades\Hash::make($user['Identificación (CC)'])
                 ]
             );
     }
