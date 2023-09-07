@@ -17,6 +17,14 @@ use Revolution\Google\Sheets\Facades\Sheets;
 */
 
 Route::get('/', function () {
+
+    $user = auth()->user();
+
+    if ($user->role_id === 1) {
+
+        return redirect()->route('votes.index.view');
+    }
+
     return redirect()->route('elections.index.view');
 })->middleware(['auth']);
 
@@ -59,8 +67,8 @@ Route::resource('api/elections', \App\Http\Controllers\ElectionController::class
 ]);
 Route::post('/api/elections/{election}/setActive', [\App\Http\Controllers\ElectionController::class, 'setActive'])->middleware(['auth', 'isAdmin'])->name('api.elections.setActive');
 Route::post('/api/elections/{election}/deactivate', [\App\Http\Controllers\ElectionController::class, 'deactivate'])->middleware(['auth', 'isAdmin'])->name('api.elections.deactivate');
-Route::get('/api/elections/{electionId}/boards', [\App\Http\Controllers\ElectionController::class, 'getBoards'])->middleware(['auth', 'isAdmin'])->name('api.elections.boards');
-Route::get('/elections/active', [\App\Http\Controllers\ElectionController::class, 'getActive'])->middleware(['auth', 'isAdmin'])->name('elections.active');
+Route::get('/api/elections/{electionId}/boards', [\App\Http\Controllers\ElectionController::class, 'getBoards'])->middleware(['auth'])->name('api.elections.boards');
+Route::get('/elections/active', [\App\Http\Controllers\ElectionController::class, 'getActive'])->middleware(['auth'])->name('elections.active');
 Route::get('/elections/{election}/report', [\App\Http\Controllers\ElectionController::class, 'generateReport'])->middleware(['auth', 'isAdmin'])->name('elections.report');
 
 

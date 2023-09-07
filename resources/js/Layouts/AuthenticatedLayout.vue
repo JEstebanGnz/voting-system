@@ -244,7 +244,7 @@ export default {
 
             {
                 name: 'Gestionar',
-                role: 3,
+                role: 6,
                 active: false,
                 icon: 'mdi-cog-box',
                 items: [
