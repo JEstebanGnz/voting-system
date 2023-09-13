@@ -85,34 +85,6 @@ Route::resource('api/votes', \App\Http\Controllers\VoteController::class, [
     'as' => 'api'
 ]);
 
-Route::get('/googleTest', function () {
-
-    $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Respuestas')->get();
-    $header = $sheet->pull(0);
-    $values = Sheets::collection($header, $sheet);
-    $users = array_values($values->toArray());
-//    dd($users);
-
-    foreach ($users as $user){
-
-            \Illuminate\Support\Facades\DB::table('users')->updateOrInsert
-            (
-                ['email' => $user['Correo electrónico']],
-                [   'identification_number' => $user['Identificación (CC)'],
-                    'name' => $user['Nombre'],
-                    'role_id' => 1,
-                    'has_payment' => $user['Pago'] === 'Sí' ,
-                    'password' => \Illuminate\Support\Facades\Hash::make($user['Identificación (CC)'])
-                ]
-            );
-    }
-
-    $usersDB = \Illuminate\Support\Facades\DB::table('users')->get();
-
-    return "Info actualizada correctamente";
-
-});
-
 Route::get('/insertAdmin', function () {
 
    \Illuminate\Support\Facades\DB::table('users')->insert(['name' => 'Admin', 'email' => 'desarrolladorg3@unibague.edu.co',
