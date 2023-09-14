@@ -3,24 +3,19 @@
         <v-app-bar app color="grey darken-4" class="white--text" elevate-on-scroll>
             <slot name="custom-v-app-bar-icon"></slot>
             <Link href="/" class="mr-2">
-                <img src="/images/cooperative-logo.png"
-                     style="max-height: 40px; max-width:255px; object-fit: contain"
-                >
-
+                <img src="/images/uni2.jpg"
+                     style="max-height: 60px; max-width:270px; object-fit: contain; border-radius: 5% ">
             </Link>
             <v-toolbar-title class="shrink-on-scroll d-none d-md-block">
                 <span class="brand__title">
-                {{ siteName }}
+
                 </span>
             </v-toolbar-title>
 
-
             <v-spacer></v-spacer>
-
             <!--CUSTOM APP BAR CONTENT SLOT-->
             <slot name="app-bar-content"></slot>
             <!--CUSTOM APP BAR CONTENT SLOT-->
-
 
         </v-app-bar>
         <!--CUSTOM NAVIGATION DRAWER SLOT-->

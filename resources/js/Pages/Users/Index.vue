@@ -16,28 +16,33 @@
             <div class="dd-flex flex-column align-end mb-8">
                 <h2 class="align-self-start">Gestionar usuarios</h2>
             </div>
-
-            <!--Inicia tabla-->
-            <v-data-table
-                loading-text="Cargando, por favor espere..."
-                :loading="isLoading"
-                :headers="headers"
-                :items="users"
-                :items-per-page="15"
-                class="elevation-1"
-            >
-
-                <template v-slot:item.has_payment="{item}" >
-
-                    {{item.has_payment === 1 ? 'Sí' : 'No'}}
-
-                </template>
-
-
-            </v-data-table>
-            <!--Acaba tabla-->
+            <v-card>
+                <v-card-title>
+                    <v-text-field
+                        v-model="search"
+                        append-icon="mdi-magnify"
+                        label="Filtrar por nombre"
+                        single-line
+                        hide-details
+                    ></v-text-field>
+                </v-card-title>
+                <!--Inicia tabla-->
+                <v-data-table
+                    :search="search"
+                    loading-text="Cargando, por favor espere..."
+                    :loading="isLoading"
+                    :headers="headers"
+                    :items="users"
+                    :items-per-page="15"
+                    class="elevation-1"
+                >
+                    <template v-slot:item.has_payment="{item}">
+                        {{ item.has_payment === 1 ? 'Sí' : 'No' }}
+                    </template>
+                </v-data-table>
+                <!--Acaba tabla-->
+            </v-card>
         </v-container>
-
     </AuthenticatedLayout>
 </template>
 
@@ -57,7 +62,6 @@ export default {
         return {
             //Table info
             headers: [
-                {text: 'ID', value: 'id'},
                 {text: 'Nombre', value: 'name'},
                 {text: 'Correo electrónico', value: 'email'},
                 {text: 'C.C', value: 'identification_number'},
@@ -71,7 +75,8 @@ export default {
                 timeout: 3000
             },
             //overlays
-            isLoading: true
+            isLoading: true,
+            search: '',
         }
     },
     async created() {

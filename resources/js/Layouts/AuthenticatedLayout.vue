@@ -207,8 +207,6 @@
         </template>
         <!--This is the main slot, it will contain all application content-->
         <slot></slot>
-
-
     </GeneralLayout>
 </template>
 
@@ -248,39 +246,30 @@ export default {
                 active: false,
                 icon: 'mdi-cog-box',
                 items: [
-
                     {
                         name: 'Elecciones',
                         href: route('elections.index.view'),
                         role: 3,
                         icon: 'mdi-account-cog'
                     },
-
-
                     {
                         name: 'Resultados',
                         href: route('elections.index.view'),
                         role: 3,
                         icon: 'mdi-account-cog'
                     },
-
-
                     {
                         name: 'Usuarios',
                         href: route('users.index.view'),
                         role: 3,
                         icon: 'mdi-account-cog'
                     },
-
                     {
                         name: 'Roles',
                         href: route('roles.index'),
                         role: 1,
                         icon: 'mdi-calendar'
                     }
-
-
-
                 ]
 
             },
