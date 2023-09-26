@@ -2,7 +2,7 @@
 
     <AuthenticatedLayout>
 
-        <div v-if="votingOptions" class="align-center px-6 " style="width: 100%">
+        <div v-if="votingOptions && !alreadyVoted" class="align-center px-6 " style="width: 100%">
             <h1 class="text-center">Emitiendo voto para la elección: {{election.name}}</h1>
             <v-divider class="my-6"></v-divider>
             <div class="fill-height my-4" v-if="isLoading">
@@ -55,11 +55,14 @@
         </div>
 
 
-        <div v-else>
-
-            <h2 class="text-center"> En este momento no hay ninguna votación activa, por favor espera a las indicaciones del Administrador</h2>
-
+        <div v-else-if="!votingOptions && !alreadyVoted" style="margin: 10px auto 10px auto">
+            <h2> En este momento no hay ninguna votación activa, por favor espera a las indicaciones del Administrador</h2>
         </div>
+
+        <div v-if="alreadyVoted" style="margin: 10px auto 10px auto">
+            <h2> Gracias por votar, por favor espera a las indicaciones del administrador</h2>
+        </div>
+
 
         <!-- SNACKBAR-->
         <v-snackbar
@@ -85,6 +88,7 @@
                     <v-btn
                         @click="function(){
                             showDialog = false
+                            isAbleToVote();
                         }"
                         color="primario"
                         class="grey--text text--lighten-4">
@@ -148,12 +152,13 @@ export default {
             selectedVotingOption: '',
             showDialog: false,
             isLoading: true,
-
+            alreadyVoted: false,
         }
     },
 
     async created(){
         await this.getActiveElection();
+        await this.isAbleToVote();
         // console.log(this.$page.props.user);
         this.getVotingOptions();
         this.isLoading = false;
@@ -194,7 +199,13 @@ export default {
                 this.snackbar.text = e.response.data.message;
                 this.snackbar.status = true;
             }
+        },
+
+        async isAbleToVote(){
+            let request = await axios.get(route('votes.user.isAbleToVote', {election:this.election, user:this.$page.props.user}))
+            this.alreadyVoted = request.data;
         }
+
     }
 }
 </script>

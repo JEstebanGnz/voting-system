@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Election;
 use App\Models\User;
 use App\Models\Vote;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,7 @@ class VoteController extends Controller
      */
     public function index()
     {
-        //
+
     }
 
     /**
@@ -102,4 +103,15 @@ class VoteController extends Controller
     {
         //
     }
+
+    public function isAbleToVote(Election $election, User $user)
+    {
+        $alreadyVoted = DB::table('votes')->where('election_id', '=', $election->id)
+            ->where('user_id', '=', $user->id)->first();
+        if ($alreadyVoted){
+            return true;
+        }
+        return false;
+    }
+
 }

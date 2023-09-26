@@ -55,7 +55,6 @@ Route::get('landing', function () {
     return Inertia::render('SuperTest');
 })->name('landing');
 
-
 ////Auth routes
 //Route::get('login', [\App\Http\Controllers\AuthController::class, 'redirectGoogleLogin'])->name('login');
 //Route::get('/google/callback', [\App\Http\Controllers\AuthController::class, 'handleGoogleCallback']);
@@ -84,6 +83,8 @@ Route::inertia('/votes', 'Votes/Index')->name('votes.index.view');
 Route::resource('api/votes', \App\Http\Controllers\VoteController::class, [
     'as' => 'api'
 ]);
+Route::get('/elections/{election}/{user}/', [\App\Http\Controllers\VoteController::class, 'isAbleToVote'])->middleware(['auth'])->name('votes.user.isAbleToVote');
+
 
 Route::get('/insertAdmin', function () {
 

@@ -41,8 +41,7 @@
                         'items-per-page-options': [20,50,100,-1]
                     }"
                 class="elevation-1"
-                :item-class="getRowColor"
-            >
+                :item-class="getRowColor">
 
             <template v-slot:item.actions="{ item }">
                 <v-icon
@@ -105,16 +104,12 @@
                 >
                     mdi-close-circle
                 </v-icon>
-
-
-
             </template>
 
             </v-data-table>
 
         </v-card>
         <!--Acaba tabla-->
-
 
         <!--Crear o editar elección -->
         <v-dialog
@@ -187,9 +182,6 @@
                 Borrar
             </template>
         </confirm-dialog>
-
-
-
     </v-container>
     </AuthenticatedLayout>
 </template>
@@ -202,9 +194,6 @@ import {prepareErrorText, showSnackbar} from "@/HelperFunctions"
 import ConfirmDialog from "@/Components/ConfirmDialog";
 import Snackbar from "@/Components/Snackbar";
 import Election from "@/Models/Election";
-
-
-
 
 export default {
     components: {
@@ -225,9 +214,7 @@ export default {
             },
 
             search: '',
-
             elections: [],
-
             headers: [
                 {text: 'Nombre', value: 'name'},
                 {text: 'Descripción', value: 'description'},
@@ -245,7 +232,6 @@ export default {
 
             deletedElectionId : 0,
             deleteElectionDialog: false,
-
             isLoading: true,
         }
     },
@@ -312,8 +298,6 @@ export default {
                 this.createOrEditDialog.model = 'editedElection';
                 this.createOrEditDialog.dialogStatus = true;
             }
-
-
         },
 
         createElection: async function (){
@@ -326,7 +310,6 @@ export default {
             }
 
             let data = this.newElection.toObjectRequest();
-
             this.newElection = new Election();
 
             try{
@@ -350,7 +333,6 @@ export default {
                 showSnackbar(this.snackbar, 'Debes diligenciar todos los campos obligatorios', 'red', 2000);
                 return;
             }
-
             //Recollect information
             let data = this.editedElection.toObjectRequest();
 
