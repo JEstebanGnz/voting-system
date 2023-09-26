@@ -49,11 +49,11 @@ class UpdateUsersCommand extends Command
             \Illuminate\Support\Facades\DB::table('users')->updateOrInsert
             (
                 ['email' => $user['Correo electrónico']],
-                [   'identification_number' => $user['Identificación (CC)'],
+                [   'identification_number' => $user['Número de Identificación'],
                     'name' => $user['Nombre'],
                     'role_id' => 1,
                     'has_payment' => $user['Pago'] === 'Sí' ,
-                    'password' => \Illuminate\Support\Facades\Hash::make($user['Identificación (CC)'])
+                    'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])
                 ]
             );
         }
