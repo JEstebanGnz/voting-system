@@ -73,9 +73,7 @@
 
                 <v-tooltip top>
                     <template v-slot:activator="{on,attrs}">
-
                         <InertiaLink :href="route('boards.index.view', {electionId:item.id})">
-
                             <v-icon
                                 v-bind="attrs"
                                 v-on="on"
@@ -83,9 +81,7 @@
                             >
                                 mdi-format-list-bulleted
                             </v-icon>
-
                         </InertiaLink>
-
                     </template>
                     <span>Gestionar Elección</span>
                 </v-tooltip>
@@ -96,7 +92,6 @@
                 >
                     mdi-cursor-default-click
                 </v-icon>
-
 
                 <v-icon v-if="(item.is_active)"
                         class="mr-2 primario--text"
@@ -237,7 +232,6 @@ export default {
     },
 
     async created(){
-
         await this.getElections();
         this.isLoading = false;
     },
@@ -279,10 +273,8 @@ export default {
         async getElections(){
 
             let request = await axios.get(route('api.elections.index'));
-
             this.elections = request.data;
         },
-
 
         setElectionDialogToCreateOrEdit(which, item = null){
 
@@ -303,17 +295,14 @@ export default {
         createElection: async function (){
 
             if (this.newElection.hasEmptyProperties()){
-
                 showSnackbar(this.snackbar, 'Debes diligenciar todos los campos obligatorios', 'red', 2000);
                 return;
-
             }
 
             let data = this.newElection.toObjectRequest();
             this.newElection = new Election();
 
             try{
-
                 let request = await axios.post(route('api.elections.store'), data);
                 this.createOrEditDialog.dialogStatus = false;
                 showSnackbar(this.snackbar, request.data.message, 'success', 2000);
@@ -323,8 +312,6 @@ export default {
             catch (e){
                 showSnackbar(this.snackbar, e.response.data.message, 'alert', 3000);
             }
-
-
         },
 
         editElection: async function (){
@@ -365,7 +352,6 @@ export default {
             } catch (e) {
                 showSnackbar(this.snackbar, e.response.data.message, 'red', 3000);
             }
-
         },
 
         getRowColor: function (item) {

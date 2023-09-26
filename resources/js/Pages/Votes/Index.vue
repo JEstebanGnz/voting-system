@@ -158,7 +158,6 @@ export default {
 
     async created(){
         await this.getActiveElection();
-        await this.isAbleToVote();
         // console.log(this.$page.props.user);
         this.getVotingOptions();
         this.isLoading = false;
@@ -169,7 +168,12 @@ export default {
         getActiveElection: async function(){
             let request = await axios.get(route('elections.active'))
             console.log(request.data);
-            this.election = request.data
+            this.election = request.data;
+
+            if(this.election !== ""){
+                await this.isAbleToVote();
+            }
+
         },
 
         getVotingOptions (){
@@ -202,8 +206,8 @@ export default {
         },
 
         async isAbleToVote(){
-            let request = await axios.get(route('votes.user.isAbleToVote', {election:this.election, user:this.$page.props.user}))
-            this.alreadyVoted = request.data;
+                let request = await axios.get(route('votes.user.isAbleToVote', {election:this.election , user:this.$page.props.user}))
+                this.alreadyVoted = request.data;
         }
 
     }

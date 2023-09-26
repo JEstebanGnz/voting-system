@@ -30,7 +30,13 @@ class Election extends Model
 
     public static function getActiveElection()
     {
-        return self::where('is_active', '=', 1)->with('boards')->first();
+        $activeElection = self::where('is_active', '=', 1)->with('boards')->first();
+
+        if ($activeElection){
+            return response()->json($activeElection);
+        }
+
+        return null;
     }
 
     public function getVotingReport()

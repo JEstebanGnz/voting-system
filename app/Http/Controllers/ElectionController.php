@@ -48,9 +48,9 @@ class ElectionController extends Controller
 
     }
 
-    public function getActive():JsonResponse
+    public function getActive()
     {
-        return response()->json(Election::getActiveElection());
+        return Election::getActiveElection();
     }
 
     public function deactivate (Request $request, Election $election): JsonResponse
@@ -63,8 +63,6 @@ class ElectionController extends Controller
         }
 
         return response()->json(['message' => 'Se ha desactivado la elección, ya no hay elecciones activas']);
-
-
     }
 
 
