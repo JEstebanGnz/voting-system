@@ -33,26 +33,26 @@ class Election extends Model
     {
         $activeElection = self::where('is_active', '=', 1)->with('boards')->first();
 
-        $boards = $activeElection->boards;
+        if ($activeElection){
 
+            $boards = $activeElection->boards;
 
-        foreach ($boards as $board){
+            foreach ($boards as $board){
 
-            $lines = DB::table('board_members as bm')->where('board_id', '=', $board->id)
-                ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
-                ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
-                ->select('bm.*', 'a.name as head_name','b.name as substitute_name')
-                ->orderBy('priority', 'ASC')->get();
+                $lines = DB::table('board_members as bm')->where('board_id', '=', $board->id)
+                    ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                    ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                    ->select('bm.*', 'a.name as head_name','b.name as substitute_name')
+                    ->orderBy('priority', 'ASC')->get();
 
-            if(count($lines) === 0){
-                continue;
+                if(count($lines) === 0){
+                    continue;
+                }
+
+                $board['lines'] = $lines;
+
             }
 
-            $board['lines'] = $lines;
-
-        }
-
-        if ($activeElection){
             return response()->json($activeElection);
         }
 

@@ -2,7 +2,7 @@
 
     <AuthenticatedLayout>
 
-        <div v-if="(votingOptions && !alreadyVoted) || (votingOptions && judicialAuthority) " class="align-center px-6 " style="width: 100%">
+        <div v-if="(election && !alreadyVoted) || (election && judicialAuthority)" class="align-center px-6 " style="width: 100%">
             <h1 class="text-center">Emitiendo voto para la elección: {{election.name}}</h1>
             <v-divider class="my-6"></v-divider>
             <div class="fill-height my-4" v-if="isLoading">
@@ -21,7 +21,7 @@
                                 <v-card-title>
 
                                 <div v-for="(votingOptionLine, key) in votingOption.lines" id="content">
-                                    <p class="grey--text"> <strong class="black--text"> Titular: </strong> {{votingOptionLine.head_name}} -----
+                                    <p class="grey--text"> <strong class="black--text"> Titular: </strong> {{votingOptionLine.head_name}} <br>
                                         <strong class="black--text"> Suplente:  </strong> {{votingOptionLine.substitute_name}}</p>
                                 </div>
 
@@ -60,8 +60,6 @@
                 </v-btn>
             </div>
 
-
-
             <div class="d-flex justify-center mt-12" v-if="!isLoading && !alreadyVoted">
                 <v-btn
                     @click="vote()"
@@ -74,12 +72,12 @@
         </div>
 
 
-        <div v-else-if="!votingOptions && !alreadyVoted" style="margin: 10px auto 10px auto">
-            <h2> En este momento no hay ninguna votación activa, por favor espera a las indicaciones del Administrador</h2>
+        <div v-else-if="!this.election" style="margin: 10px auto 10px auto">
+            <h2> En este momento no hay ninguna votación activa, por favor espera a las indicaciones del presidente</h2>
         </div>
 
         <div v-if="alreadyVoted && !judicialAuthority" style="margin: 10px auto 10px auto">
-            <h2> Gracias por votar, por favor espera a las indicaciones del administrador</h2>
+            <h2> Gracias por votar, por favor espera a las indicaciones del presidente</h2>
         </div>
 
 
@@ -121,7 +119,7 @@
                         <span>
                         </span>
                     <span
-                        class="text-h5"> Escoge la persona por la cual quieres ejercer voto </span>
+                        class="text-h5" id="content2"> Escoge la persona por la cual quieres ejercer voto </span>
                 </v-card-title>
                 <v-card-text>
                     <v-container>
@@ -135,7 +133,6 @@
                                     :item-text="(p)=>p.name"
                                     :item-value="(p)=>p"
                                 >
-
                                 </v-autocomplete>
                             </v-col>
                         </v-row>
@@ -156,7 +153,7 @@
                         text
                         @click="vote('authority')"
                     >
-                        Guardar cambios
+                        Votar
                     </v-btn>
                 </v-card-actions>
             </v-card>
@@ -168,6 +165,14 @@
 <style>
 
 #content{
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    margin: auto;
+    text-align: center;
+}
+
+#content2{
     overflow-wrap: break-word;
     word-wrap: break-word;
     word-break: break-word;
@@ -237,9 +242,9 @@ export default {
             let request = await axios.get(route('elections.active'))
             console.log(request.data);
             this.election = request.data;
-            await this.judicialAuthorityUsers();
 
             if(this.election !== ""){
+                await this.judicialAuthorityUsers();
                 await this.isAbleToVote();
                 this.votingOptions = this.election.boards;
             }

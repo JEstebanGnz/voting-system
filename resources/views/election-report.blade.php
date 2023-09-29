@@ -67,9 +67,31 @@
 
         @foreach($electionData->electionFinalBoards as $election)
             @if($election->totalWonPositions > 0)
-                @foreach($election->wholeMembers as $electionBoardLine)
-                    <p style="text-align: center"><strong>Titular: </strong> {{$electionBoardLine->head_name}}  ----- <strong>Suplente:  </strong>{{$electionBoardLine->substitute_name}} </p>
-                @endforeach
+
+                <table class="table" style="max-width: 85%; margin: auto" >
+                    <thead>
+                    <tr>
+                        <th scope="col">Plancha</th>
+                        <th scope="col">Titular</th>
+                        <th scope="col">Suplente</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @foreach($teacherResults as $teacherResult)
+                        <tr>
+                            <td style="text-transform: capitalize">{{$election->description}}</td>
+                            <td>{{$electionBoardLine->head_name}} </td>
+                            <td>{{$electionBoardLine->substitute_name}}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+
+                </table>
+
+{{--                @foreach($election->wholeMembers as $electionBoardLine)--}}
+{{--                    <p style="text-align: center"><strong>Titular: </strong> {{$electionBoardLine->head_name}}  ----- <strong>Suplente:  </strong>{{$electionBoardLine->substitute_name}} </p>--}}
+{{--                @endforeach--}}
             @endif
         @endforeach
     @else
