@@ -43,12 +43,6 @@
                     class="elevation-4"
                 >
 
-                    <template v-slot:item.description="{item}" >
-
-                        <p class="card-text" style="font-size: 1.2em" v-html="item.description" />
-
-                    </template>
-
 
                     <template v-slot:item.actions="{ item }">
                         <v-icon
@@ -64,9 +58,24 @@
                             mdi-delete
                         </v-icon>
 
+                        <v-tooltip top>
+                            <template v-slot:activator="{on,attrs}">
 
+                                <InertiaLink :href="route('board.manage.view', {election: route().params.electionId, board:item.id})">
+                                    <v-icon
+                                        v-bind="attrs"
+                                        v-on="on"
+                                        class="mr-2 primario--text"
+                                    >
+                                        mdi-account-group
+                                    </v-icon>
+
+                                </InertiaLink>
+
+                            </template>
+                            <span>Gestionar Plancha</span>
+                        </v-tooltip>
                     </template>
-
                 </v-data-table>
 
             </v-card>
@@ -89,13 +98,27 @@
                         <v-container>
                             <v-row>
                                 <v-col cols="12">
-                                        <VueTrix  v-model="$data[createOrEditDialog.model].description"
-                                                  placeholder="Descripción (integrantes) de la plancha"/>
+                                    <v-text-field
+                                        label="Descripción de la plancha"
+                                        required
+                                        v-model="$data[createOrEditDialog.model].description"
+                                    ></v-text-field>
                                 </v-col>
                             </v-row>
                         </v-container>
                         <small>Los campos con * son obligatorios</small>
                     </v-card-text>
+<!--                    <v-card-text>-->
+<!--                        <v-container>-->
+<!--                            <v-row>-->
+<!--                                <v-col cols="12">-->
+<!--                                        <VueTrix  v-model="$data[createOrEditDialog.model].description"-->
+<!--                                                  placeholder="Descripción (integrantes) de la plancha"/>-->
+<!--                                </v-col>-->
+<!--                            </v-row>-->
+<!--                        </v-container>-->
+<!--                        <small>Los campos con * son obligatorios</small>-->
+<!--                    </v-card-text>-->
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn

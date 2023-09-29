@@ -19,7 +19,19 @@ class CreateRolesTable extends Migration
             $table->smallInteger('customId');
             $table->timestamps();
         });
+
+        //Create the first two roles
+        \Illuminate\Support\Facades\DB::table('roles')->insert(
+            [
+               ['name' => 'voter', 'customId' => 3],
+               ['name' => 'admin', 'customId' => 10]
+            ]
+        );
+
     }
+
+
+
 
     /**
      * Reverse the migrations.

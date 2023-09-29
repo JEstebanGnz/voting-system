@@ -2,7 +2,7 @@
 
     <AuthenticatedLayout>
 
-        <div v-if="votingOptions && !alreadyVoted" class="align-center px-6 " style="width: 100%">
+        <div v-if="(votingOptions && !alreadyVoted) || (votingOptions && judicialAuthority) " class="align-center px-6 " style="width: 100%">
             <h1 class="text-center">Emitiendo voto para la elección: {{election.name}}</h1>
             <v-divider class="my-6"></v-divider>
             <div class="fill-height my-4" v-if="isLoading">
@@ -19,7 +19,13 @@
                         <vue-glow color="#1e3a62" mode="hex" elevation="20">
                             <v-card outlined>
                                 <v-card-title>
-                                        <p id="content" style="font-size: 0.75em" v-html="votingOption.description" />
+
+                                <div v-for="(votingOptionLine, key) in votingOption.lines" id="content">
+                                    <p class="grey--text"> <strong class="black--text"> Titular: </strong> {{votingOptionLine.head_name}} -----
+                                        <strong class="black--text"> Suplente:  </strong> {{votingOptionLine.substitute_name}}</p>
+                                </div>
+
+
                                 </v-card-title>
                                 <v-card-actions class="d-flex justify-center mb-2">
                                     <v-btn
@@ -43,7 +49,20 @@
                 <v-divider class="my-8" v-if="key !== (votingOptions.length-1)"></v-divider>
             </template>
 
-            <div class="d-flex justify-center mt-12" v-if="!isLoading">
+
+            <div class="d-flex justify-center mt-12" v-if="!isLoading && judicialAuthority">
+                <v-btn
+                    @click="showAuthorityVoteDialog = true"
+                    color="primario"
+                    large
+                    class="grey--text text--lighten-4">
+                    Emitir voto con Poder
+                </v-btn>
+            </div>
+
+
+
+            <div class="d-flex justify-center mt-12" v-if="!isLoading && !alreadyVoted">
                 <v-btn
                     @click="vote()"
                     color="primario"
@@ -59,7 +78,7 @@
             <h2> En este momento no hay ninguna votación activa, por favor espera a las indicaciones del Administrador</h2>
         </div>
 
-        <div v-if="alreadyVoted" style="margin: 10px auto 10px auto">
+        <div v-if="alreadyVoted && !judicialAuthority" style="margin: 10px auto 10px auto">
             <h2> Gracias por votar, por favor espera a las indicaciones del administrador</h2>
         </div>
 
@@ -86,10 +105,7 @@
                 </v-card-text>
                 <v-card-actions class="d-flex justify-end">
                     <v-btn
-                        @click="function(){
-                            showDialog = false
-                            isAbleToVote();
-                        }"
+                        @click="showDialog = false"
                         color="primario"
                         class="grey--text text--lighten-4">
                         Finalizar
@@ -97,6 +113,55 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- Voto con poder -->
+        <v-dialog v-model="showAuthorityVoteDialog" width="500" persistent>
+            <v-card>
+                <v-card-title>
+                        <span>
+                        </span>
+                    <span
+                        class="text-h5"> Escoge la persona por la cual quieres ejercer voto </span>
+                </v-card-title>
+                <v-card-text>
+                    <v-container>
+                        <v-row>
+                            <v-col cols="7">
+                                <v-autocomplete
+                                    color="primario"
+                                    v-model="selectedOnRepresentationUser"
+                                    :items="onRepresentationUsers"
+                                    label="Usuario a escoger"
+                                    :item-text="(p)=>p.name"
+                                    :item-value="(p)=>p"
+                                >
+
+                                </v-autocomplete>
+                            </v-col>
+                        </v-row>
+                    </v-container>
+                    <small>Los campos con * son obligatorios</small>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="primario"
+                        text
+                        @click="showAuthorityVoteDialog = false"
+                    >
+                        Cancelar
+                    </v-btn>
+                    <v-btn
+                        color="primario"
+                        text
+                        @click="vote('authority')"
+                    >
+                        Guardar cambios
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
     </AuthenticatedLayout>
 </template>
 
@@ -151,16 +216,19 @@ export default {
             ],
             selectedVotingOption: '',
             showDialog: false,
+            showAuthorityVoteDialog: false,
             isLoading: true,
             alreadyVoted: false,
+            judicialAuthority: false,
+            onRepresentationUsers: [],
+            selectedOnRepresentationUser:'',
         }
     },
 
     async created(){
         await this.getActiveElection();
-        // console.log(this.$page.props.user);
-        this.getVotingOptions();
         this.isLoading = false;
+
     },
 
     methods: {
@@ -169,22 +237,32 @@ export default {
             let request = await axios.get(route('elections.active'))
             console.log(request.data);
             this.election = request.data;
+            await this.judicialAuthorityUsers();
 
             if(this.election !== ""){
                 await this.isAbleToVote();
+                this.votingOptions = this.election.boards;
             }
 
-        },
-
-        getVotingOptions (){
-            this.votingOptions = this.election.boards;
         },
 
         selectVotingOption: function (votingOption) {
             this.selectedVotingOption = votingOption
         },
 
-        async vote(){
+        async judicialAuthorityUsers(){
+
+            let request = await axios.get(route('judicialA.users',
+                {user:this.$page.props.user,
+                election:this.election}))
+            console.log(request.data);
+            this.onRepresentationUsers = request.data;
+
+            this.judicialAuthority = this.onRepresentationUsers.length > 0;
+
+        },
+
+        async vote(authorityVote){
 
             if (this.selectedVotingOption === ''){
                 this.snackbar.text = 'Debes seleccionar una plancha antes de votar';
@@ -192,12 +270,24 @@ export default {
                 return
             }
 
-            let data = {user_id: this.$page.props.user.id,
-                 board_id: this.selectedVotingOption.id,
-                 election_id:  this.election.id}
+            let data = {}
+
+            if (authorityVote === 'authority'){
+                data = {user_id: this.selectedOnRepresentationUser.id,
+                    board_id: this.selectedVotingOption.id,
+                    election_id:  this.election.id}
+            }
+
+            else {
+                data = {user_id: this.$page.props.user.id,
+                    board_id: this.selectedVotingOption.id,
+                    election_id:  this.election.id}
+            }
 
             try {
                 let request = await axios.post(route('api.votes.store'), {userVote: data});
+                this.showAuthorityVoteDialog = false;
+                await this.getActiveElection();
                 this.showDialog = true;
             } catch (e) {
                 this.snackbar.text = e.response.data.message;
@@ -206,9 +296,17 @@ export default {
         },
 
         async isAbleToVote(){
-                let request = await axios.get(route('votes.user.isAbleToVote', {election:this.election , user:this.$page.props.user}))
+
+                let request = await axios.post(route('votes.user.isAbleToVote'),{
+                    user:this.$page.props.user,
+                    election:this.election});
+
+                if (request.data === true && this.judicialAuthority === true){
+                    return true
+                }
+
                 this.alreadyVoted = request.data;
-        }
+        },
 
     }
 }

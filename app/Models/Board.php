@@ -26,4 +26,11 @@ class Board extends Model
     }
 
 
+    public static function getBoardMembers ($boardId){
+
+        return self::where('id', $boardId)->with('board')->first();
+
+    }
+
+
 }

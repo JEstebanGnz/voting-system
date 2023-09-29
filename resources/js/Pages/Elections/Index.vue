@@ -137,6 +137,19 @@
                                 ></v-text-field>
                             </v-col>
 
+                            <v-col cols="10">
+                                <v-text-field
+                                    color="primario"
+                                    required
+                                    v-model="$data[createOrEditDialog.model].max_lines"
+                                    label="Define el número de curules a asignar en la elección"
+                                    type="number"
+                                    min="1"
+                                    max="10"
+                                    class="mt-2"
+                                ></v-text-field>
+                                <span> Una vez crees la primera plancha de esta elección <strong> YA NO PODRÁS MODIFICAR EL NÚMERO DE CURULES </strong></span>
+                            </v-col>
                         </v-row>
                     </v-container>
                     <small>Los campos con * son obligatorios</small>
@@ -213,6 +226,7 @@ export default {
             headers: [
                 {text: 'Nombre', value: 'name'},
                 {text: 'Descripción', value: 'description'},
+                {text: 'Curules', value: 'max_lines'},
                 {text: 'Acciones', value: 'actions'},
             ],
 
@@ -271,7 +285,6 @@ export default {
         },
 
         async getElections(){
-
             let request = await axios.get(route('api.elections.index'));
             this.elections = request.data;
         },
@@ -301,6 +314,9 @@ export default {
 
             let data = this.newElection.toObjectRequest();
             this.newElection = new Election();
+
+            console.log(this.newElection);
+
 
             try{
                 let request = await axios.post(route('api.elections.store'), data);

@@ -38,7 +38,7 @@ class UpdateUsersCommand extends Command
      */
     public function handle()
     {
-        $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Respuestas')->get();
+        /*$sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Respuestas')->get();
         $header = $sheet->pull(0);
         $values = Sheets::collection($header, $sheet);
         $users = array_values($values->toArray());
@@ -48,16 +48,58 @@ class UpdateUsersCommand extends Command
 
             \Illuminate\Support\Facades\DB::table('users')->updateOrInsert
             (
-                ['email' => $user['Correo electrónico']],
-                [   'identification_number' => $user['Número de Identificación'],
-                    'name' => $user['Nombre'],
+                ['identification_number' => $user['Número de Identificación']],
+                [   'email' => $user['Correo electrónico'],
+                    'name' => $user['Nombre para votación'],
                     'role_id' => 1,
-                    'has_payment' => $user['Pago'] === 'Sí' ,
+                    'has_payment' => $user['Pago'] === 1 ,
                     'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])
                 ]
             );
-        }
+        }*/
 
+        $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Test')->get();
+        $header = $sheet->pull(0);
+        $values = Sheets::collection($header, $sheet);
+        $users = array_values($values->toArray());
+
+        foreach ($users as $user){
+
+            if(($user['Asistió'] === "1" && $user['Pago'] === "1" && $user['Monto'] !== "")
+                || ($user['Poder'] !== "" && $user['Pago'] === "1" && $user['Monto'] !== "")){
+
+                DB::table('users')->updateOrInsert
+                (
+                    ['identification_number' => $user['Número de Identificación']],
+                    [   'email' => $user['Correo electrónico'],
+                        'name' => $user['Nombre para votación'],
+                        'role_id' => 1,
+                        'has_payment' => $user['Pago'] === "1",
+                        'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])
+                    ]
+                );
+
+                if ($user['Poder'] !== "" && $user['Pago'] === "1" && $user['Monto'] !== ""){
+
+                    $authority = DB::table('users')
+                        ->where('identification_number', '=', $user['Poder'])->first();
+
+                    if(!$authority){
+                        continue;
+                    }
+
+                    $user = DB::table('users')
+                        ->where('identification_number', '=', $user['Número de Identificación'])->first();
+
+                    DB::table('user_judicial_authority')->updateOrInsert(['authority_id' => $authority->id],
+                        [
+                            'user_id' => $user->id,
+                            'created_at' => Carbon::now('GMT-5')->toDateTimeString(),
+                            'updated_at' => Carbon::now('GMT-5')->toDateTimeString()
+                        ]);
+                }
+            }
+        }
         return 0;
     }
 }

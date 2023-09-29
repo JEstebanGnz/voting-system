@@ -40,12 +40,10 @@ class ElectionController extends Controller
 
     public function getBoards(int $electionId): JsonResponse
     {
-
         $boards = DB::table('boards as b')->select(['b.id','b.description', 'e.name as election_name'])
             ->join('elections as e', 'b.election_id', '=', 'e.id')->where('election_id', '=', $electionId)->get();
 
         return response()->json($boards);
-
     }
 
     public function getActive()
@@ -68,9 +66,10 @@ class ElectionController extends Controller
 
     public function generateReport(Request $request, Election $election)
     {
-        $electionVotes = $election->getVotingReport();
+        $electionData = $election->getVotingReport($election);
         $electionName = $election->name;
-        return Pdf::loadView('election-report', compact('electionVotes', 'electionName'))
+
+        return Pdf::loadView('election-report', compact('electionData', 'electionName'))
             ->stream("Reporte para la elección $electionName.pdf");
     }
 

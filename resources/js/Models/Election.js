@@ -10,19 +10,21 @@ export default class Election {
     }
 
     static fromModel(model) {
-        return new Election(model.id, model.name, model.description, model.is_active);
+        return new Election(model.id, model.name, model.description, model.max_lines, model.is_active);
     }
 
-    constructor(id = null, name = '', description = '', is_active = false) {
+    constructor(id = null, name = '', description = '', max_lines = '', is_active = false) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.max_lines = max_lines;
         this.is_active = is_active;
 
         this.dataStructure = {
             id: null,
             name: 'required',
             description: 'required',
+            max_lines: 'required',
             is_active: 'required',
 
         }

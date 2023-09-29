@@ -42,6 +42,7 @@ class VoteController extends Controller
 
        $userVote = $request->input('userVote');
         //verify if the user already voted
+
        $voter = DB::table('votes')->where('user_id', '=', $userVote['user_id'])
            ->where('election_id', '=', $userVote['election_id'])->first();
 
@@ -104,10 +105,14 @@ class VoteController extends Controller
         //
     }
 
-    public function isAbleToVote(Election $election, User $user)
+    public function isAbleToVote(Request $request)
     {
-        $alreadyVoted = DB::table('votes')->where('election_id', '=', $election->id)
-            ->where('user_id', '=', $user->id)->first();
+
+        $user = $request->input('user');
+        $election = $request->input('election');
+
+        $alreadyVoted = DB::table('votes')->where('election_id', '=', $election['id'])
+            ->where('user_id', '=', $user['id'])->first();
         if ($alreadyVoted){
             return true;
         }
