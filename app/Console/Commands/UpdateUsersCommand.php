@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Revolution\Google\Sheets\Facades\Sheets;
 
 class UpdateUsersCommand extends Command
