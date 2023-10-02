@@ -71,10 +71,28 @@ class Election extends Model
              $totalElectionVotes = 0;
              $originalSlotsToAssign =$election->max_lines;
              $slotsToAssign = $election->max_lines;
+             $votesChecker = 0;
 
-             foreach ($boardsTotal as $boardTotal){
-                  $totalElectionVotes += $boardTotal->total_votes;
-             }
+
+            foreach ($boardsTotal as $boardTotal){
+
+                $counter = 0;
+                $totalElectionVotes += $boardTotal->total_votes;
+                $votesChecker = $boardTotal->total_votes;
+
+                foreach ($boardsTotal as $boardTotalFindTie) {
+
+                    if ($boardTotalFindTie->total_votes === $votesChecker){
+                        $counter++;
+                    }
+
+                    if ($boardTotalFindTie->total_votes === $votesChecker && $counter > 1){
+                        $boardTotal->has_tie=1;
+                    }
+
+                }
+
+            }
 
             $electoralCoefficient = $totalElectionVotes/$slotsToAssign;
 
@@ -87,6 +105,8 @@ class Election extends Model
                 $boardTotal->magicNumber = round ($n,2);
                 $boardTotal->wholeTotal = $whole;
                 $boardTotal->fractionTotal = round ($fraction, 2);
+
+                //Aqui hacemos las asignaciones por la parte entera de cada curul..
 
                 if ($boardTotal->wholeTotal > 0){
 
@@ -104,17 +124,55 @@ class Election extends Model
 
             //Si hubo curules por asignar luego de haber asignado con las partes enteras, procedemos a hacer las asignaciones con los residuos.
 
+
+            //Si hubo empate, entonces seleccionamos mediante la suerte cuál será la elección ganadora.
             $boards = $boardsTotal->sortByDesc('fractionTotal');
 
             if ($slotsToAssign > 0) {
                 $counter = 0;
+                $boardsWithTie = [];
+
+                foreach ($boards as $board) {
+                    if(property_exists($board, 'has_tie')) {
+                        $boardsWithTie [] = $board;
+                    }
+                }
+
+                if (count($boardsWithTie) > 0){
+
+                    $randomBoard = $boardsWithTie[array_rand($boardsWithTie)];
+                    $arrayOfIdsSelectedMembers = [];
+
+                    $randomBoard->tie_winner = 1;
+
+                    if(property_exists($randomBoard, 'wholeMembers')){
+                        $alreadySelectedMembers = $randomBoard->wholeMembers;
+
+                        foreach ($alreadySelectedMembers as $alreadySelectedMember) {
+                            $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
+                        }
+                    }
+
+                    if ($counter <= $slotsToAssign) {
+
+                        $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $randomBoard->board_id)
+                            ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
+                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                            ->orderBy('priority', 'ASC')->take(1)->first();
+
+                        $randomBoard->wholeMembers->push($membersToAssign);
+                        $slotsToAssign--;
+                        $counter++;
+                    }
+                }
+
 
                 foreach ($boards as $board) {
 
                     $arrayOfIdsSelectedMembers = [];
-
                     if(property_exists($board, 'wholeMembers')){
-
                         $alreadySelectedMembers = $board->wholeMembers;
 
                         foreach ($alreadySelectedMembers as $alreadySelectedMember) {
@@ -151,13 +209,15 @@ class Election extends Model
 
         }
 
-        $finalBoards = $boards->sortByDesc('wholeTotal');
+        $finalBoards = $boards->sortBy([['wholeTotal','desc'],['totalWonPositions','desc']]);
 
         $electionFinalData = (object)[];
         $electionFinalData->electionSlots = $originalSlotsToAssign;
         $electionFinalData->electionVotes = $totalElectionVotes;
         $electionFinalData->electionCoefficient = $electoralCoefficient;
         $electionFinalData->electionFinalBoards = $finalBoards;
+
+//       dd($electionFinalData);
 
         return $electionFinalData;
 

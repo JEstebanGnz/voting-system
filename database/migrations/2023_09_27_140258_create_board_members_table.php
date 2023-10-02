@@ -18,7 +18,7 @@ class CreateBoardMembersTable extends Migration
             $table->foreignId('board_id')->constrained();
             $table->foreignId('head_id');
             $table->foreign('head_id')->references('id')->on('users');
-            $table->foreignId('substitute_id');
+            $table->foreignId('substitute_id')->nullable();
             $table->foreign('substitute_id')->references('id')->on('users');
             $table->smallInteger('priority');
             $table->timestamps();
