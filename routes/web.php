@@ -53,6 +53,7 @@ Route::patch('/api/users/{user}/roles', [\App\Http\Controllers\Users\ApiUserCont
 Route::get('/api/users/{user}/roles', [\App\Http\Controllers\Users\ApiUserController::class, 'getUserRole'])->middleware('auth')->name('api.users.roles.show');
 Route::get('/users/suitableToAdd', [\App\Http\Controllers\Users\ApiUserController::class, 'getSuitableUsersToAdd'])->middleware('auth')->name('users.suitableToAdd');
 Route::get('/users/{user}/{election}/isJudicialAuthority', [\App\Http\Controllers\Users\ApiUserController::class, 'judicialAuthorityUsers'])->middleware('auth')->name('judicialA.users');
+Route::get('/users/{user}/isJudicialAuthorityBVoting', [\App\Http\Controllers\Users\ApiUserController::class, 'judicialAuthorityUsersBeforeVoting'])->middleware('auth')->name('judicialA.users.bVoting');
 
 
 
@@ -112,40 +113,39 @@ Route::get('/update', function () {
 
     $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Test')->get();
     $header = $sheet->pull(0);
-/*    dd($sheet,$header);*/
+    /*    dd($sheet,$header);*/
     $values = Sheets::collection($header, $sheet);
     $users = array_values($values->toArray());
 
     foreach ($users as $user){
 
-       if(($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
-           $user['Asistió'] === "1" && $user['Pago'] === "1" && $user['Monto'] !== "")){
-
-           DB::table('users')->updateOrInsert
-           (
-               ['identification_number' => $user['Número de Identificación']],
-               [   'email' => $user['Correo electrónico'],
-                   'name' => $user['Nombre'],
-                   'role_id' => 1,
-                   'has_payment' => $user['Pago'] === "1",
-                   'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])
-               ]
-           );
-
-       }
-    }
-
-    foreach ($users as $user) {
-
-
-        if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
-            $user['Poder'] !== "" && $user['Pago'] === "1" && $user['Monto'] !== "") {
+        if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
+            $user['Asistió'] === "1" && $user['Pago'] === "1"){
 
             DB::table('users')->updateOrInsert
             (
                 ['identification_number' => $user['Número de Identificación']],
                 [   'email' => $user['Correo electrónico'],
-                    'name' => $user['Nombre'],
+                    'name' => $user['Nombre para votación'],
+                    'role_id' => 1,
+                    'has_payment' => $user['Pago'] === "1",
+                    'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])
+                ]
+            );
+
+        }
+    }
+
+    foreach ($users as $user) {
+
+        if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
+            $user['Asistió'] === "1" && $user['Poder'] !== "" && $user['Pago'] === "1") {
+
+            DB::table('users')->updateOrInsert
+            (
+                ['identification_number' => $user['Número de Identificación']],
+                [   'email' => $user['Correo electrónico'],
+                    'name' => $user['Nombre para votación'],
                     'role_id' => 1,
                     'has_payment' => $user['Pago'] === "1",
                     'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])

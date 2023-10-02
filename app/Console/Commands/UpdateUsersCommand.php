@@ -48,14 +48,14 @@ class UpdateUsersCommand extends Command
 
         foreach ($users as $user){
 
-            if(($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
-                $user['Asistió'] === "1" && $user['Pago'] === "1" && $user['Monto'] !== "")){
+            if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
+                $user['Asistió'] === "1" && $user['Pago'] === "1"){
 
                 DB::table('users')->updateOrInsert
                 (
                     ['identification_number' => $user['Número de Identificación']],
                     [   'email' => $user['Correo electrónico'],
-                        'name' => $user['Nombre'],
+                        'name' => $user['Nombre para votación'],
                         'role_id' => 1,
                         'has_payment' => $user['Pago'] === "1",
                         'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])
@@ -67,15 +67,14 @@ class UpdateUsersCommand extends Command
 
         foreach ($users as $user) {
 
-
             if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
-                $user['Poder'] !== "" && $user['Pago'] === "1" && $user['Monto'] !== "") {
+                $user['Asistió'] === "1" && $user['Poder'] !== "" && $user['Pago'] === "1") {
 
                 DB::table('users')->updateOrInsert
                 (
                     ['identification_number' => $user['Número de Identificación']],
                     [   'email' => $user['Correo electrónico'],
-                        'name' => $user['Nombre'],
+                        'name' => $user['Nombre para votación'],
                         'role_id' => 1,
                         'has_payment' => $user['Pago'] === "1",
                         'password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación'])

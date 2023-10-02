@@ -72,8 +72,22 @@
         </div>
 
 
-        <div v-else-if="!this.election" style="margin: 10px auto 10px auto">
+        <div v-else-if="!this.election" style="margin: 10px auto 10px auto; text-align: center">
             <h2> En este momento no hay ninguna votación activa, por favor espera a las indicaciones del presidente</h2>
+
+            <h2 style="margin-top: 20px"> Usuario: </h2>
+
+            <h2>  {{this.realUser.name}} </h2>
+
+            <h3 style="margin-top: 20px"> Poderes: </h3>
+
+            <h3 v-for="user in onRepresentationUsersBeforeVoting" style="margin-top: 2px" >
+                -{{user.name}}
+            </h3>
+
+
+
+
         </div>
 
         <div v-if="alreadyVoted && !judicialAuthority" style="margin: 10px auto 10px auto">
@@ -226,17 +240,24 @@ export default {
             alreadyVoted: false,
             judicialAuthority: false,
             onRepresentationUsers: [],
+            onRepresentationUsersBeforeVoting: [],
             selectedOnRepresentationUser:'',
+            realUser: '',
         }
     },
 
     async created(){
         await this.getActiveElection();
+        this.getRealUserInfo();
         this.isLoading = false;
 
     },
 
     methods: {
+
+        getRealUserInfo(){
+            this.realUser = this.$page.props.user
+        },
 
         getActiveElection: async function(){
             let request = await axios.get(route('elections.active'))
@@ -248,6 +269,20 @@ export default {
                 await this.isAbleToVote();
                 this.votingOptions = this.election.boards;
             }
+
+            else{
+                await this.judicialAuthorityBeforeVoting();
+            }
+
+
+        },
+
+        async judicialAuthorityBeforeVoting(){
+
+            let request = await axios.get(route('judicialA.users.bVoting',
+                {user:this.$page.props.user}))
+            console.log(request.data);
+            this.onRepresentationUsersBeforeVoting = request.data;
 
         },
 

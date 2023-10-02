@@ -74,6 +74,7 @@ class Election extends Model
              $votesChecker = 0;
 
 
+
             foreach ($boardsTotal as $boardTotal){
 
                 $counter = 0;
@@ -108,6 +109,8 @@ class Election extends Model
 
                 //Aqui hacemos las asignaciones por la parte entera de cada curul..
 
+
+
                 if ($boardTotal->wholeTotal > 0){
 
                     $members = DB::table('board_members as bm')->where('board_id', '=', $boardTotal->board_id)
@@ -122,7 +125,7 @@ class Election extends Model
                 }
             }
 
-            //Si hubo curules por asignar luego de haber asignado con las partes enteras, procedemos a hacer las asignaciones con los residuos.
+
 
 
             //Si hubo empate, entonces seleccionamos mediante la suerte cuál será la elección ganadora.
@@ -169,6 +172,7 @@ class Election extends Model
                 }
 
 
+                //Si hubo curules por asignar luego de haber asignado con las partes enteras, procedemos a hacer las asignaciones con los residuos.
                 foreach ($boards as $board) {
 
                     $arrayOfIdsSelectedMembers = [];
@@ -178,26 +182,26 @@ class Election extends Model
                         foreach ($alreadySelectedMembers as $alreadySelectedMember) {
                             $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
                         }
+
+                        if ($counter <= $slotsToAssign) {
+
+                            $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $board->board_id)
+                                ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
+                                ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                                ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                                ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                                ->orderBy('priority', 'ASC')->take(1)->first();
+
+                            $board->wholeMembers->push($membersToAssign);
+
+                            $slotsToAssign--;
+                            $counter++;
+
+                        }
                     }
-
-                    if ($counter <= $slotsToAssign) {
-
-                        $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $board->board_id)
-                            ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
-                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
-                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
-                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
-                            ->orderBy('priority', 'ASC')->take(1)->first();
-
-                        $board->wholeMembers->push($membersToAssign);
-
-                        $slotsToAssign--;
-                        $counter++;
-
-                    }
-
                 }
             }
+
 
         foreach ($boards as $board) {
             if (property_exists($board, 'wholeMembers')) {
@@ -217,7 +221,6 @@ class Election extends Model
         $electionFinalData->electionCoefficient = $electoralCoefficient;
         $electionFinalData->electionFinalBoards = $finalBoards;
 
-//       dd($electionFinalData);
 
         return $electionFinalData;
 

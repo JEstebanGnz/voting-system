@@ -45,6 +45,18 @@ class ApiUserController extends Controller
         return response()->json($users);
     }
 
+    public function judicialAuthorityUsersBeforeVoting(User $user)
+    {
+
+        $delegatedUsers = DB::table('user_judicial_authority as uja')->where('uja.authority_id', '=', $user->id)
+            ->join('users as u', 'u.id','=','uja.user_id')
+            ->where('u.has_payment', '=', 1)->select(['u.id', 'u.name'])
+            ->get();
+
+        return response()->json($delegatedUsers);
+    }
+
+
     public function judicialAuthorityUsers(User $user, Election $election)
     {
 
