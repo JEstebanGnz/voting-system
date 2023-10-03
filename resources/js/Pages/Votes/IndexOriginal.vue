@@ -2,10 +2,8 @@
 
     <AuthenticatedLayout>
 
-        <div v-if="(election && ableToVote) || (election && judicialAuthority)" class="align-center px-6 " style="width: 100%">
+        <div v-if="(election && !alreadyVoted) || (election && judicialAuthority)" class="align-center px-6 " style="width: 100%">
             <h1 class="text-center">Emitiendo voto para la elección: {{election.name}}</h1>
-            <h2 class="text-center">Nombre del votante actual: {{currentUser.name}}</h2>
-
             <v-divider class="my-6"></v-divider>
             <div class="fill-height my-4" v-if="isLoading">
                 <v-row>
@@ -26,6 +24,7 @@
                                     <p class="grey--text"> <strong class="black--text"> Titular: </strong> {{votingOptionLine.head_name}} <br>
                                         <strong class="black--text"> Suplente:  </strong> {{votingOptionLine.substitute_name}}</p>
                                 </div>
+
 
                                 </v-card-title>
                                 <v-card-actions class="d-flex justify-center mb-2">
@@ -50,7 +49,18 @@
                 <v-divider class="my-8" v-if="key !== (votingOptions.length-1)"></v-divider>
             </template>
 
-            <div class="d-flex justify-center mt-12" v-if="(!isLoading && ableToVote) || (!isLoading && judicialAuthority)">
+
+            <div class="d-flex justify-center mt-12" v-if="!isLoading && judicialAuthority">
+                <v-btn
+                    @click="showAuthorityVoteDialog = true"
+                    color="primario"
+                    large
+                    class="grey--text text--lighten-4">
+                    Emitir voto con Poder
+                </v-btn>
+            </div>
+
+            <div class="d-flex justify-center mt-12" v-if="!isLoading && !alreadyVoted">
                 <v-btn
                     @click="vote()"
                     color="primario"
@@ -67,18 +77,18 @@
 
             <h2 style="margin-top: 20px"> Usuario: </h2>
 
-            <h2>  {{this.currentUser.name}} </h2>
+            <h2>  {{this.realUser.name}} </h2>
 
-            <div v-if="onRepresentationUsersBeforeVoting.length > 0">
             <h3 style="margin-top: 20px"> Poderes: </h3>
 
             <h3 v-for="user in onRepresentationUsersBeforeVoting" style="margin-top: 2px" >
                 -{{user.name}}
             </h3>
-            </div>
+
+
         </div>
 
-        <div v-if="!ableToVote && !judicialAuthority" style="margin: 10px auto 10px auto">
+        <div v-if="alreadyVoted && !judicialAuthority" style="margin: 10px auto 10px auto">
             <h2> Gracias por votar, por favor espera a las indicaciones del presidente</h2>
         </div>
 
@@ -105,7 +115,7 @@
                 </v-card-text>
                 <v-card-actions class="d-flex justify-end">
                     <v-btn
-                        @click="checkCurrentStatus()"
+                        @click="showDialog = false"
                         color="primario"
                         class="grey--text text--lighten-4">
                         Finalizar
@@ -231,48 +241,21 @@ export default {
             onRepresentationUsersBeforeVoting: [],
             selectedOnRepresentationUser:'',
             realUser: '',
-            currentUser: '',
-            ableToVote: true,
         }
     },
 
     async created(){
         await this.getActiveElection();
-        await this.checkCurrentUserInfo();
+        this.getRealUserInfo();
         this.isLoading = false;
 
     },
 
     methods: {
 
-       async checkCurrentUserInfo(){
-            this.currentUser = this.$page.props.user;
-
-            if(!this.ableToVote && this.judicialAuthority){
-
-                for (const representadedUser of this.onRepresentationUsers) {
-
-                    console.log(representadedUser, 'representadedUser');
-
-                    let request = await axios.get(route('votes.userRepresentaded.isAbleToVote',{
-                        user:representadedUser,
-                        election:this.election}));
-
-                    if (request.data == true){
-                        this.currentUser = representadedUser;
-                        return;
-                    }
-
-                    else{
-                        this.judicialAuthority = false;
-                    }
-
-                }
-
-            }
-
+        getRealUserInfo(){
+            this.realUser = this.$page.props.user
         },
-
 
         getActiveElection: async function(){
             let request = await axios.get(route('elections.active'))
@@ -310,40 +293,44 @@ export default {
             let request = await axios.get(route('judicialA.users',
                 {user:this.$page.props.user,
                 election:this.election}))
-
-            console.log(request.data, 'usuarios sobre los que va a poder votar');
+            console.log(request.data);
             this.onRepresentationUsers = request.data;
+
             this.judicialAuthority = this.onRepresentationUsers.length > 0;
 
         },
 
-        async vote(){
+        async vote(authorityVote){
 
             if (this.selectedVotingOption === ''){
                 this.snackbar.text = 'Debes seleccionar una plancha antes de votar';
                 this.snackbar.status = true;
+                return
+            }
+
+            let data = {}
+
+            if (authorityVote === 'authority'){
+                data = {user_id: this.selectedOnRepresentationUser.id,
+                    board_id: this.selectedVotingOption.id,
+                    election_id:  this.election.id}
             }
 
             else {
-                let data = {user_id: this.currentUser.id,
+                data = {user_id: this.$page.props.user.id,
                     board_id: this.selectedVotingOption.id,
                     election_id:  this.election.id}
-
-
-                console.log(data, 'DATAAAAAAA')
-
-                try {
-                    let request = await axios.post(route('api.votes.store'), {userVote: data});
-                    await this.getActiveElection();
-                    this.showDialog = true;
-                } catch (e) {
-                    this.snackbar.text = e.response.data.message;
-                    this.snackbar.status = true;
-                }
-
             }
 
-
+            try {
+                let request = await axios.post(route('api.votes.store'), {userVote: data});
+                this.showAuthorityVoteDialog = false;
+                await this.getActiveElection();
+                this.showDialog = true;
+            } catch (e) {
+                this.snackbar.text = e.response.data.message;
+                this.snackbar.status = true;
+            }
         },
 
         async isAbleToVote(){
@@ -352,21 +339,12 @@ export default {
                     user:this.$page.props.user,
                     election:this.election});
 
-                this.ableToVote = request.data;
-
-                if (this.judicialAuthority === true){
+                if (request.data === true && this.judicialAuthority === true){
                     return true
                 }
 
+                this.alreadyVoted = request.data;
         },
-
-
-        async checkCurrentStatus(){
-            await this.checkCurrentUserInfo();
-            this.showDialog = false;
-            window. scrollTo({ top: 0, left: 0});
-
-        }
 
     }
 }

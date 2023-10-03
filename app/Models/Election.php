@@ -74,7 +74,6 @@ class Election extends Model
              $votesChecker = 0;
 
 
-
             foreach ($boardsTotal as $boardTotal){
 
                 $counter = 0;
@@ -90,14 +89,13 @@ class Election extends Model
                     if ($boardTotalFindTie->total_votes === $votesChecker && $counter > 1){
                         $boardTotal->has_tie=1;
                     }
-
                 }
-
             }
 
             $electoralCoefficient = $totalElectionVotes/$slotsToAssign;
 
-            foreach ($boardsTotal as $boardTotal){
+
+        foreach ($boardsTotal as $boardTotal){
 
                 $n = $boardTotal->total_votes/$electoralCoefficient;
                 $whole = floor($n);      // 1
@@ -108,8 +106,6 @@ class Election extends Model
                 $boardTotal->fractionTotal = round ($fraction, 2);
 
                 //Aqui hacemos las asignaciones por la parte entera de cada curul..
-
-
 
                 if ($boardTotal->wholeTotal > 0){
 
@@ -123,18 +119,116 @@ class Election extends Model
 
                     $slotsToAssign -= count($members);
                 }
-            }
+        }
 
 
+        //Si la elección es para una sola curul, incluímos primero la lógica de asignar las curules por la parte decimal y luego si llega a haber empate
+        if($election->max_lines === 1){
 
-
-            //Si hubo empate, entonces seleccionamos mediante la suerte cuál será la elección ganadora.
             $boards = $boardsTotal->sortByDesc('fractionTotal');
 
-            if ($slotsToAssign > 0) {
-                $counter = 0;
-                $boardsWithTie = [];
+            $counter = 0;
+            //Si hubo curules por asignar luego de haber asignado con las partes enteras, procedemos a hacer las asignaciones con los residuos.
+            foreach ($boards as $board) {
 
+                $arrayOfIdsSelectedMembers = [];
+                if(property_exists($board, 'wholeMembers')){
+                    $alreadySelectedMembers = $board->wholeMembers;
+
+                    foreach ($alreadySelectedMembers as $alreadySelectedMember) {
+                        $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
+                    }
+
+                    if ($slotsToAssign > 0) {
+                        $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $board->board_id)
+                            ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
+                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                            ->orderBy('priority', 'ASC')->take(1)->first();
+
+                        $board->wholeMembers->push($membersToAssign);
+
+                        $slotsToAssign--;
+                    }
+                }
+
+                else{
+                    if ($slotsToAssign > 0) {
+                        $members = DB::table('board_members as bm')->where('board_id', '=', $board->board_id)
+                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                            ->orderBy('priority', 'ASC')->take(1)->get();
+
+                        $board->wholeMembers = $members;
+                        $slotsToAssign--;
+                    }
+                }
+            }
+
+            //Si hubo empate, entonces seleccionamos mediante la suerte cuál será la elección ganadora.
+            $boards = $boardsTotal->sortByDesc('total_votes');
+
+            if ($slotsToAssign > 0) {
+                $boardsWithTie = [];
+                foreach ($boards as $board) {
+                    if(property_exists($board, 'has_tie')) {
+                        $boardsWithTie [] = $board;
+                    }
+                }
+
+                if (count($boardsWithTie) > 0){
+
+                    $randomBoard = $boardsWithTie[array_rand($boardsWithTie)];
+                    $arrayOfIdsSelectedMembers = [];
+                    $randomBoard->tie_winner = 1;
+
+                    if(property_exists($randomBoard, 'wholeMembers')){
+                        $alreadySelectedMembers = $randomBoard->wholeMembers;
+
+                        foreach ($alreadySelectedMembers as $alreadySelectedMember) {
+                            $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
+                        }
+
+                        if ($slotsToAssign > 0) {
+
+                            $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $randomBoard->board_id)
+                                ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
+                                ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                                ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                                ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                                ->orderBy('priority', 'ASC')->take(1)->first();
+
+                            $randomBoard->wholeMembers->push($membersToAssign);
+                            $slotsToAssign--;
+                        }
+                    }
+
+                    else{
+                        if ($slotsToAssign > 0){
+                        $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $randomBoard->board_id)
+                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                            ->orderBy('priority', 'ASC')->take(1)->first();
+
+                        $randomBoard->wholeMembers = $membersToAssign;
+                        $slotsToAssign--;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        //En cambio, si la elección tiene más de una curúl, entonces implementamos primero la lógica de calcular si hubo empate y luego asignar los decimales.
+        else{
+            //Si hubo empate, entonces seleccionamos mediante la suerte cuál será la elección ganadora.
+            $boards = $boardsTotal->sortByDesc('total_votes');
+
+            if ($slotsToAssign > 0) {
+                $boardsWithTie = [];
                 foreach ($boards as $board) {
                     if(property_exists($board, 'has_tie')) {
                         $boardsWithTie [] = $board;
@@ -147,60 +241,86 @@ class Election extends Model
                     $arrayOfIdsSelectedMembers = [];
 
                     $randomBoard->tie_winner = 1;
-
+                    //Si ya había algun elegido, entonces se agrega a esa lista y se traen los que ya estaban para no volver a seleccionarlos
                     if(property_exists($randomBoard, 'wholeMembers')){
                         $alreadySelectedMembers = $randomBoard->wholeMembers;
 
                         foreach ($alreadySelectedMembers as $alreadySelectedMember) {
                             $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
                         }
-                    }
 
-                    if ($counter <= $slotsToAssign) {
+                        if ($slotsToAssign > 0) {
 
-                        $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $randomBoard->board_id)
-                            ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
-                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
-                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
-                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
-                            ->orderBy('priority', 'ASC')->take(1)->first();
-
-                        $randomBoard->wholeMembers->push($membersToAssign);
-                        $slotsToAssign--;
-                        $counter++;
-                    }
-                }
-
-
-                //Si hubo curules por asignar luego de haber asignado con las partes enteras, procedemos a hacer las asignaciones con los residuos.
-                foreach ($boards as $board) {
-
-                    $arrayOfIdsSelectedMembers = [];
-                    if(property_exists($board, 'wholeMembers')){
-                        $alreadySelectedMembers = $board->wholeMembers;
-
-                        foreach ($alreadySelectedMembers as $alreadySelectedMember) {
-                            $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
-                        }
-
-                        if ($counter <= $slotsToAssign) {
-
-                            $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $board->board_id)
+                            $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $randomBoard->board_id)
                                 ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
                                 ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
                                 ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
                                 ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
                                 ->orderBy('priority', 'ASC')->take(1)->first();
 
-                            $board->wholeMembers->push($membersToAssign);
-
+                            $randomBoard->wholeMembers->push($membersToAssign);
                             $slotsToAssign--;
-                            $counter++;
+                        }
+                    }
 
+
+                    else {
+
+                        if ($slotsToAssign > 0){
+                            //Si no, simplemente se agrega el primero.
+                            $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $randomBoard->board_id)
+                                ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                                ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                                ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                                ->orderBy('priority', 'ASC')->take(1)->first();
+
+                            $randomBoard->wholeMembers = $membersToAssign;
+                            $slotsToAssign--;
                         }
                     }
                 }
             }
+
+            $boards = $boardsTotal->sortByDesc('fractionTotal');
+
+            //Si hubo curules por asignar luego de haber asignado con las partes enteras, procedemos a hacer las asignaciones con los residuos.
+            foreach ($boards as $board) {
+
+                $arrayOfIdsSelectedMembers = [];
+                if(property_exists($board, 'wholeMembers')){
+                    $alreadySelectedMembers = $board->wholeMembers;
+
+                    foreach ($alreadySelectedMembers as $alreadySelectedMember) {
+                        $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
+                    }
+
+                    if ($slotsToAssign > 0) {
+                        $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $board->board_id)
+                            ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
+                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                            ->orderBy('priority', 'ASC')->take(1)->first();
+
+                        $board->wholeMembers->push($membersToAssign);
+                        $slotsToAssign--;
+                    }
+                }
+
+                else{
+                    if ($slotsToAssign > 0) {
+                        $members = DB::table('board_members as bm')->where('board_id', '=', $board->board_id)
+                            ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                            ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                            ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                            ->orderBy('priority', 'ASC')->take(1)->get();
+
+                        $board->wholeMembers = $members;
+                        $slotsToAssign--;
+                    }
+                }
+            }
+        }
 
 
         foreach ($boards as $board) {
@@ -210,7 +330,6 @@ class Election extends Model
             else{
                 $board->totalWonPositions = 0;
             }
-
         }
 
         $finalBoards = $boards->sortBy([['wholeTotal','desc'],['totalWonPositions','desc']]);

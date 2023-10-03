@@ -75,6 +75,11 @@ class BoardController extends Controller
     public function saveBoardMembers(Request $request, Board $board)
     {
         $data = $request->input('data');
+
+        if (!array_key_exists("substitute_id",$data)){
+            $data['substitute_id'] = null;
+        }
+
         try {
             DB::table('board_members')->updateOrInsert(['board_id' => $board->id, 'priority' => $data['priority'] ],
                 ['head_id' => $data['head_id'], 'substitute_id' => $data['substitute_id']]);

@@ -2,19 +2,19 @@
 
 namespace App\Console\Commands;
 
-use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Revolution\Google\Sheets\Facades\Sheets;
 
-class UpdateUsersCommand extends Command
+class InsertNewUsers extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'users:update';
+    protected $signature = 'users:insert';
 
     /**
      * The console command description.
@@ -46,21 +46,18 @@ class UpdateUsersCommand extends Command
         $values = Sheets::collection($header, $sheet);
         $users = array_values($values->toArray());
 
-
         foreach ($users as $user){
+
 
             if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
                 $user['Asistió'] === "1" && $user['Pago'] === "1"){
 
-                DB::table('users')->updateOrInsert
-                (
-                    ['identification_number' => $user['Número de Identificación']],
-                    [
+                \App\Models\User::firstOrCreate( ['identification_number' => $user['Número de Identificación']],
+                    ['password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación']),
                         'email' => $user['Correo electrónico'],
-                        'name' => $user['Nombre para votación']
-                    ]
-                );
-
+                        'name' => $user['Nombre para votación'],
+                        'role_id' => 1,
+                        'has_payment' => 1]);
             }
         }
 
@@ -69,13 +66,12 @@ class UpdateUsersCommand extends Command
             if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
                 $user['Asistió'] === "1" && $user['Poder'] !== "" && $user['Pago'] === "1") {
 
-                DB::table('users')->updateOrInsert
-                (
-                    ['identification_number' => $user['Número de Identificación']],
-                    [   'email' => $user['Correo electrónico'],
+                \App\Models\User::firstOrCreate( ['identification_number' => $user['Número de Identificación']],
+                    ['password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación']),
+                        'email' => $user['Correo electrónico'],
                         'name' => $user['Nombre para votación'],
-                    ]
-                );
+                        'role_id' => 1,
+                        'has_payment' => 1]);
 
                 $authority = DB::table('users')
                     ->where('identification_number', '=', $user['Poder'])->first();
@@ -95,6 +91,7 @@ class UpdateUsersCommand extends Command
                     ]);
             }
         }
+
         return 0;
     }
 }

@@ -76,9 +76,12 @@
         @endforeach
 
 
+        @if($electionData->electionSlots == 1)
+            <h2 style="margin-top: 50px"> El miembro elegido es:</h2>
+        @else
+            <h2 style="margin-top: 50px"> Los {{$electionData->electionSlots}} miembros elegidos serán:</h2>
+        @endif
 
-
-        <h2 style="margin-top: 50px"> Los {{$electionData->electionSlots}} miembros elegidos serán:</h2>
 
 {{--        @foreach($electionData->electionFinalBoards as $election)--}}
 {{--            @if($election->totalWonPositions > 0)--}}
@@ -115,11 +118,6 @@
         </table>
 
 
-
-
-
-
-
     @else
         <h2 style="text-align: center">
             No hay votos registrados en esta elección
@@ -128,7 +126,7 @@
     @endif
 
     <p>
-        Este reporte ha sido generado por el Sistema de Votaciones el {{new \Carbon\Carbon()}}.
+        Este reporte ha sido generado por el Sistema de Votaciones el {{\Carbon\Carbon::now('GMT-5')->toDateTimeString()}}.
     </p>
 </div>
 

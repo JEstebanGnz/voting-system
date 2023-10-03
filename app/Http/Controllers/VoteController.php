@@ -105,6 +105,20 @@ class VoteController extends Controller
         //
     }
 
+
+    public function isRepresentadedAbleToVote(Election $election, User $user)
+    {
+
+        $alreadyVoted = DB::table('votes')->where('election_id', '=', $election->id)
+            ->where('user_id', '=', $user->id)->first();
+
+        if (!$alreadyVoted){
+            return true;
+        }
+        return false;
+    }
+
+
     public function isAbleToVote(Request $request)
     {
 
@@ -113,7 +127,8 @@ class VoteController extends Controller
 
         $alreadyVoted = DB::table('votes')->where('election_id', '=', $election['id'])
             ->where('user_id', '=', $user['id'])->first();
-        if ($alreadyVoted){
+
+        if (!$alreadyVoted){
             return true;
         }
         return false;
