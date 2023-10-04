@@ -36,7 +36,8 @@ class User extends Authenticatable
         'identification_number',
         'password',
         'role_id',
-        'has_payment'
+        'has_payment',
+        'external_user'
     ];
 
     /**

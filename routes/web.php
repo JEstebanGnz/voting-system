@@ -119,11 +119,13 @@ Route::get('/insertNewUsers', function () {
     $values = Sheets::collection($header, $sheet);
     $users = array_values($values->toArray());
 
+
+   //Este primer foreach es para insertar únicamente a usuarios, no se tiene en cuenta los poderes
     foreach ($users as $user){
 
-
+        //Si es una persona que se convertirá en asociado
         if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
-            $user['Asistió'] === "1" && $user['Pago'] === "1"){
+            $user['Asistió'] === "1" && $user['Pago'] === "1" && $user['Apoderado externo'] === "" ){
 
                 \App\Models\User::firstOrCreate( ['identification_number' => $user['Número de Identificación']],
                 ['password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación']),
@@ -132,8 +134,22 @@ Route::get('/insertNewUsers', function () {
                     'role_id' => 1,
                     'has_payment' => 1]);
         }
+
+        //Si es una persona que va únicamente en nombre de alguien a votar por esa persona, PERO NO SERÁ AFILIADO
+        if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" && $user['Apoderado externo'] === "1"){
+
+            \App\Models\User::firstOrCreate( ['identification_number' => $user['Número de Identificación']],
+                ['password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación']),
+                    'email' => $user['Correo electrónico'],
+                    'name' => $user['Nombre para votación'],
+                    'role_id' => 1,
+                    'has_payment' => 1,
+                    'external_user' => 1]);
+        }
+
     }
 
+    //Este foreach ya es para realizar las correspondientes asignaciones de poderes
     foreach ($users as $user) {
 
         if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
@@ -167,6 +183,82 @@ Route::get('/insertNewUsers', function () {
 
 
 });
+
+
+Route::get('/updateExistingUsers', function () {
+
+    $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Test')->get();
+    $header = $sheet->pull(0);
+    /*    dd($sheet,$header);*/
+    $values = Sheets::collection($header, $sheet);
+    $users = array_values($values->toArray());
+
+
+    foreach ($users as $user){
+
+        if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
+            $user['Asistió'] === "1" && $user['Pago'] === "1"){
+
+            DB::table('users')->updateOrInsert
+            (
+                ['identification_number' => $user['Número de Identificación']],
+                [
+                    'email' => $user['Correo electrónico'],
+                    'name' => $user['Nombre para votación']
+                ]
+            );
+        }
+
+        if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" && $user['Apoderado externo'] === "1"){
+
+            DB::table('users')->updateOrInsert
+            (
+                ['identification_number' => $user['Número de Identificación']],
+                [
+                    'email' => $user['Correo electrónico'],
+                    'name' => $user['Nombre para votación']
+                ]
+            );
+
+        }
+    }
+
+    foreach ($users as $user) {
+
+        if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
+            $user['Asistió'] === "1" && $user['Poder'] !== "" && $user['Pago'] === "1") {
+
+            DB::table('users')->updateOrInsert
+            (
+                ['identification_number' => $user['Número de Identificación']],
+                [   'email' => $user['Correo electrónico'],
+                    'name' => $user['Nombre para votación'],
+                ]
+            );
+
+            $authority = DB::table('users')
+                ->where('identification_number', '=', $user['Poder'])->first();
+
+            if (!$authority) {
+                continue;
+            }
+
+            $user = DB::table('users')
+                ->where('identification_number', '=', $user['Número de Identificación'])->first();
+
+            DB::table('user_judicial_authority')->updateOrInsert(['user_id' => $user->id],
+                [
+                    'authority_id' => $authority->id,
+                    'created_at' => Carbon::now('GMT-5')->toDateTimeString(),
+                    'updated_at' => Carbon::now('GMT-5')->toDateTimeString()
+                ]);
+        }
+    }
+});
+
+
+
+
 
 
 
@@ -237,61 +329,3 @@ Route::get('/update', function () {
     }
 });
 
-Route::get('/updateExistingUsers', function () {
-
-    $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Test')->get();
-    $header = $sheet->pull(0);
-    /*    dd($sheet,$header);*/
-    $values = Sheets::collection($header, $sheet);
-    $users = array_values($values->toArray());
-
-
-    foreach ($users as $user){
-
-        if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
-            $user['Asistió'] === "1" && $user['Pago'] === "1"){
-
-            DB::table('users')->updateOrInsert
-            (
-                ['identification_number' => $user['Número de Identificación']],
-                [
-                    'email' => $user['Correo electrónico'],
-                    'name' => $user['Nombre para votación']
-                ]
-            );
-
-        }
-    }
-
-    foreach ($users as $user) {
-
-        if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
-            $user['Asistió'] === "1" && $user['Poder'] !== "" && $user['Pago'] === "1") {
-
-            DB::table('users')->updateOrInsert
-            (
-                ['identification_number' => $user['Número de Identificación']],
-                [   'email' => $user['Correo electrónico'],
-                    'name' => $user['Nombre para votación'],
-                ]
-            );
-
-            $authority = DB::table('users')
-                ->where('identification_number', '=', $user['Poder'])->first();
-
-            if (!$authority) {
-                continue;
-            }
-
-            $user = DB::table('users')
-                ->where('identification_number', '=', $user['Número de Identificación'])->first();
-
-            DB::table('user_judicial_authority')->updateOrInsert(['user_id' => $user->id],
-                [
-                    'authority_id' => $authority->id,
-                    'created_at' => Carbon::now('GMT-5')->toDateTimeString(),
-                    'updated_at' => Carbon::now('GMT-5')->toDateTimeString()
-                ]);
-        }
-    }
-});

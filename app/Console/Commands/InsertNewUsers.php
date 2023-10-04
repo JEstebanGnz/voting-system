@@ -46,11 +46,13 @@ class InsertNewUsers extends Command
         $values = Sheets::collection($header, $sheet);
         $users = array_values($values->toArray());
 
+
+        //Este primer foreach es para insertar únicamente a usuarios, no se tiene en cuenta los poderes
         foreach ($users as $user){
 
-
-            if($user['Correo electrónico'] !== "" && $user['Correo electrónico'] !== "#N/A" && $user['Número de Identificación'] !== "" &&
-                $user['Asistió'] === "1" && $user['Pago'] === "1"){
+            //Si es una persona que se convertirá en asociado
+            if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
+                $user['Asistió'] === "1" && $user['Pago'] === "1" && $user['Apoderado externo'] === "" ){
 
                 \App\Models\User::firstOrCreate( ['identification_number' => $user['Número de Identificación']],
                     ['password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación']),
@@ -59,12 +61,25 @@ class InsertNewUsers extends Command
                         'role_id' => 1,
                         'has_payment' => 1]);
             }
+
+            //Si es una persona que va únicamente en nombre de alguien a votar por esa persona, PERO NO SERÁ AFILIADO
+            if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" && $user['Apoderado externo'] === "1"){
+
+                \App\Models\User::firstOrCreate( ['identification_number' => $user['Número de Identificación']],
+                    ['password' => \Illuminate\Support\Facades\Hash::make($user['Número de Identificación']),
+                        'email' => $user['Correo electrónico'],
+                        'name' => $user['Nombre para votación'],
+                        'role_id' => 1,
+                        'has_payment' => 1,
+                        'external_user' => 1]);
+            }
+
         }
 
+        //Este foreach ya es para realizar las correspondientes asignaciones de poderes
         foreach ($users as $user) {
 
-            if ($user['Correo electrónico'] !== "" && $user['Correo electrónico'] !== "#N/A"
-                && $user['Número de Identificación'] !== "" &&
+            if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
                 $user['Asistió'] === "1" && $user['Poder'] !== "" && $user['Pago'] === "1") {
 
                 \App\Models\User::firstOrCreate( ['identification_number' => $user['Número de Identificación']],

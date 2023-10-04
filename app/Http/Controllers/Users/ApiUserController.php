@@ -32,7 +32,8 @@ class ApiUserController extends Controller
     public function getSuitableUsersToAdd()
     {
 
-        $allUsers = DB::table('users as u')->where('has_payment', '=', 1)->orderBy('name', 'ASC')->get();
+        $allUsers = DB::table('users as u')->where('has_payment', '=', 1)
+            ->where('external_user', '=', false)->orderBy('name', 'ASC')->get();
         $users = [];
         foreach($allUsers as $user){
 

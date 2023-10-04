@@ -49,8 +49,20 @@ class UpdateUsersCommand extends Command
 
         foreach ($users as $user){
 
-            if($user['Correo electrónico'] !== "" && $user['Correo electrónico'] !== "#N/A" && $user['Número de Identificación'] !== "" &&
+            if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
                 $user['Asistió'] === "1" && $user['Pago'] === "1"){
+
+                DB::table('users')->updateOrInsert
+                (
+                    ['identification_number' => $user['Número de Identificación']],
+                    [
+                        'email' => $user['Correo electrónico'],
+                        'name' => $user['Nombre para votación']
+                    ]
+                );
+            }
+
+            if($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" && $user['Apoderado externo'] === "1"){
 
                 DB::table('users')->updateOrInsert
                 (
@@ -66,7 +78,7 @@ class UpdateUsersCommand extends Command
 
         foreach ($users as $user) {
 
-            if ($user['Correo electrónico'] !== "" && $user['Correo electrónico'] !== "#N/A" && $user['Número de Identificación'] !== "" &&
+            if ($user['Correo electrónico'] !== "" && $user['Número de Identificación'] !== "" &&
                 $user['Asistió'] === "1" && $user['Poder'] !== "" && $user['Pago'] === "1") {
 
                 DB::table('users')->updateOrInsert

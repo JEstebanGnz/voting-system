@@ -2,7 +2,7 @@
 
     <AuthenticatedLayout>
 
-        <div v-if="(election && ableToVote) || (election && judicialAuthority)" class="align-center px-6 " style="width: 100%">
+        <div v-if="(election && ableToVote && !externalUserFinishedVoting) || (election && judicialAuthority && !externalUserFinishedVoting) " class="align-center px-6 " style="width: 100%">
             <h1 class="text-center">Emitiendo voto para la elección: {{election.name}}</h1>
             <h2 class="text-center">Nombre del votante actual: {{currentUser.name}}</h2>
 
@@ -21,12 +21,10 @@
                         <vue-glow color="#1e3a62" mode="hex" elevation="20">
                             <v-card outlined>
                                 <v-card-title>
-
                                 <div v-for="(votingOptionLine, key) in votingOption.lines" id="content">
                                     <p class="grey--text"> <strong class="black--text"> Titular: </strong> {{votingOptionLine.head_name}} <br>
                                         <strong class="black--text"> Suplente:  </strong> {{votingOptionLine.substitute_name}}</p>
                                 </div>
-
                                 </v-card-title>
                                 <v-card-actions class="d-flex justify-center mb-2">
                                     <v-btn
@@ -65,9 +63,10 @@
         <div v-else-if="!this.election" style="margin: 10px auto 10px auto; text-align: center">
             <h2> En este momento no hay ninguna votación activa, por favor espera a las indicaciones del presidente</h2>
 
-            <h2 style="margin-top: 20px"> Usuario: </h2>
-
-            <h2>  {{this.currentUser.name}} </h2>
+            <div v-if="!isExternalUser">
+                <h2 style="margin-top: 20px"> Usuario: </h2>
+                <h2>  {{this.currentUser.name}} </h2>
+            </div>
 
             <div v-if="onRepresentationUsersBeforeVoting.length > 0">
             <h3 style="margin-top: 20px"> Poderes: </h3>
@@ -79,6 +78,10 @@
         </div>
 
         <div v-if="!ableToVote && !judicialAuthority" style="margin: 10px auto 10px auto">
+            <h2> Gracias por votar, por favor espera a las indicaciones del presidente</h2>
+        </div>
+
+        <div v-if="this.externalUserFinishedVoting && this.election" style="margin: 10px auto 10px auto">
             <h2> Gracias por votar, por favor espera a las indicaciones del presidente</h2>
         </div>
 
@@ -109,53 +112,6 @@
                         color="primario"
                         class="grey--text text--lighten-4">
                         Finalizar
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-
-        <!-- Voto con poder -->
-        <v-dialog v-model="showAuthorityVoteDialog" width="500" persistent>
-            <v-card>
-                <v-card-title>
-                        <span>
-                        </span>
-                    <span
-                        class="text-h5" id="content2"> Escoge la persona por la cual quieres ejercer voto </span>
-                </v-card-title>
-                <v-card-text>
-                    <v-container>
-                        <v-row>
-                            <v-col cols="7">
-                                <v-autocomplete
-                                    color="primario"
-                                    v-model="selectedOnRepresentationUser"
-                                    :items="onRepresentationUsers"
-                                    label="Usuario a escoger"
-                                    :item-text="(p)=>p.name"
-                                    :item-value="(p)=>p"
-                                >
-                                </v-autocomplete>
-                            </v-col>
-                        </v-row>
-                    </v-container>
-                    <small>Los campos con * son obligatorios</small>
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn
-                        color="primario"
-                        text
-                        @click="showAuthorityVoteDialog = false"
-                    >
-                        Cancelar
-                    </v-btn>
-                    <v-btn
-                        color="primario"
-                        text
-                        @click="vote('authority')"
-                    >
-                        Votar
                     </v-btn>
                 </v-card-actions>
             </v-card>
@@ -233,10 +189,13 @@ export default {
             realUser: '',
             currentUser: '',
             ableToVote: true,
+            isExternalUser: false,
+            externalUserFinishedVoting: false,
         }
     },
 
     async created(){
+        this.userInfo();
         await this.getActiveElection();
         await this.checkCurrentUserInfo();
         this.isLoading = false;
@@ -245,10 +204,18 @@ export default {
 
     methods: {
 
+        userInfo(){
+            console.log(this.$page.props.user, 'INFORMACIÓN DEL USUSARIO');
+        },
+
        async checkCurrentUserInfo(){
             this.currentUser = this.$page.props.user;
 
-            if(!this.ableToVote && this.judicialAuthority){
+            if(this.currentUser.external_user == true){
+                this.isExternalUser = true;
+            }
+
+            if(!this.ableToVote && this.judicialAuthority || this.isExternalUser){
 
                 for (const representadedUser of this.onRepresentationUsers) {
 
@@ -268,11 +235,14 @@ export default {
                     }
 
                 }
+            }
 
+            if(!this.judicialAuthority && this.isExternalUser){
+                console.log("malparidos malandros");
+                this.externalUserFinishedVoting = true;
             }
 
         },
-
 
         getActiveElection: async function(){
             let request = await axios.get(route('elections.active'))
@@ -329,7 +299,6 @@ export default {
                     board_id: this.selectedVotingOption.id,
                     election_id:  this.election.id}
 
-
                 console.log(data, 'DATAAAAAAA')
 
                 try {
@@ -342,8 +311,6 @@ export default {
                 }
 
             }
-
-
         },
 
         async isAbleToVote(){
@@ -357,9 +324,7 @@ export default {
                 if (this.judicialAuthority === true){
                     return true
                 }
-
         },
-
 
         async checkCurrentStatus(){
             await this.checkCurrentUserInfo();
@@ -367,7 +332,6 @@ export default {
             window. scrollTo({ top: 0, left: 0});
 
         }
-
     }
 }
 </script>
