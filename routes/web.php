@@ -55,6 +55,7 @@ Route::get('/users/suitableToAdd', [\App\Http\Controllers\Users\ApiUserControlle
 Route::get('/users/{user}/{election}/isJudicialAuthority', [\App\Http\Controllers\Users\ApiUserController::class, 'judicialAuthorityUsers'])->middleware('auth')->name('judicialA.users');
 Route::get('/users/{user}/isJudicialAuthorityBVoting', [\App\Http\Controllers\Users\ApiUserController::class, 'judicialAuthorityUsersBeforeVoting'])->middleware('auth')->name('judicialA.users.bVoting');
 
+Route::post('/users/manualUpdate', [\App\Http\Controllers\Users\ApiUserController::class, 'manualUpdate'])->middleware('auth')->name('users.manualUpdate');
 
 
 /* >>>>>Roles routes <<<<<< */
@@ -204,7 +205,8 @@ Route::get('/updateExistingUsers', function () {
                 ['identification_number' => $user['Número de Identificación']],
                 [
                     'email' => $user['Correo electrónico'],
-                    'name' => $user['Nombre para votación']
+                    'name' => $user['Nombre para votación'],
+                    'external_user' => 0,
                 ]
             );
         }
@@ -216,7 +218,8 @@ Route::get('/updateExistingUsers', function () {
                 ['identification_number' => $user['Número de Identificación']],
                 [
                     'email' => $user['Correo electrónico'],
-                    'name' => $user['Nombre para votación']
+                    'name' => $user['Nombre para votación'],
+                    'external_user' => 1,
                 ]
             );
 

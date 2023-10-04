@@ -73,7 +73,6 @@ class Election extends Model
              $slotsToAssign = $election->max_lines;
              $votesChecker = 0;
 
-
             foreach ($boardsTotal as $boardTotal){
 
                 $counter = 0;
@@ -93,7 +92,6 @@ class Election extends Model
             }
 
             $electoralCoefficient = $totalElectionVotes/$slotsToAssign;
-
 
         foreach ($boardsTotal as $boardTotal){
 
@@ -222,8 +220,10 @@ class Election extends Model
 
         }
 
+
         //En cambio, si la elección tiene más de una curúl, entonces implementamos primero la lógica de calcular si hubo empate y luego asignar los decimales.
         else{
+
             //Si hubo empate, entonces seleccionamos mediante la suerte cuál será la elección ganadora.
             $boards = $boardsTotal->sortByDesc('total_votes');
 
@@ -241,6 +241,7 @@ class Election extends Model
                     $arrayOfIdsSelectedMembers = [];
 
                     $randomBoard->tie_winner = 1;
+
                     //Si ya había algun elegido, entonces se agrega a esa lista y se traen los que ya estaban para no volver a seleccionarlos
                     if(property_exists($randomBoard, 'wholeMembers')){
                         $alreadySelectedMembers = $randomBoard->wholeMembers;
@@ -249,8 +250,6 @@ class Election extends Model
                             $arrayOfIdsSelectedMembers [] = $alreadySelectedMember->id;
                         }
 
-                        if ($slotsToAssign > 0) {
-
                             $membersToAssign = DB::table('board_members as bm')->where('bm.board_id', '=', $randomBoard->board_id)
                                 ->whereNotIn('bm.id', $arrayOfIdsSelectedMembers)
                                 ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
@@ -258,9 +257,11 @@ class Election extends Model
                                 ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
                                 ->orderBy('priority', 'ASC')->take(1)->first();
 
-                            $randomBoard->wholeMembers->push($membersToAssign);
+                            if($membersToAssign){
+                                $randomBoard->wholeMembers->push($membersToAssign);
+                            }
+
                             $slotsToAssign--;
-                        }
                     }
 
 
@@ -274,7 +275,10 @@ class Election extends Model
                                 ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
                                 ->orderBy('priority', 'ASC')->take(1)->first();
 
-                            $randomBoard->wholeMembers = $membersToAssign;
+                            if($membersToAssign){
+                                $randomBoard->wholeMembers->push($membersToAssign);
+                            }
+
                             $slotsToAssign--;
                         }
                     }

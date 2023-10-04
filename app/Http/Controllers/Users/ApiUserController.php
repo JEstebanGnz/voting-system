@@ -9,6 +9,7 @@ use App\Models\Election;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class ApiUserController extends Controller
 {
@@ -77,6 +78,70 @@ class ApiUserController extends Controller
         }
 
         return response()->json($finalUsers);
+    }
+
+    public function manualUpdate(Request $request)
+    {
+
+        //Get all rows
+        $rows = explode("\r\n", $request->input('data'));
+
+        //Parse the name and email
+        foreach ($rows as $key => $row) {
+            try {
+                [$name, $email, $monitoringType] = explode("\t", $row);
+            } catch (\Exception $e) {
+                $message = 'Has ingresado los datos de manera incorrecta, lo que produjo el siguiente error en el servidor: ' . $e->getMessage();
+                return response()->json(['message' => $message], 400);
+            }
+            $rows[$key] = [
+                'name' => $name,
+                'email' => $email,
+                'monitoringType' => $monitoringType,
+            ];
+        }
+
+        //Now, lets filter a detect if there are errors
+
+        foreach ($rows as $row) {
+            if ($row['name'] === '') {
+                $message = 'La siguiente entrada no cumple con el formato dispuesto (falta nombre)' .
+                    $row['name'] . ' ' . $row['email'];
+                return response()->json(['message' => $message], 400);
+            }
+
+            if (!filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
+                $message = 'La siguiente entrada no cumple con el formato dispuesto (email invalido)' .
+                    $row['name'] . ' ' . $row['email'];
+                return response()->json(['message' => $message], 400);
+            }
+
+
+            if (!str_contains($row['monitoringType'], 'académica') && !str_contains($row['monitoringType'], 'administrativa')) {
+                $message = 'Solo se permite monitorías académicas o administrativas';
+                return response()->json(['message' => $message], 400);
+            }
+
+        }
+
+        //The verification process has ended successfully
+
+        $counter = 0;
+        foreach ($rows as $row) {
+            //Check if user exist and create it if dont
+            $user = User::firstOrCreate(
+                ['email' => $row['email']],
+                [
+                    'name' => $row['name'],
+                    'password' => Hash::make('automatic_generate_password'),
+                    'role_id' => 3
+                ]
+            );
+
+            $counter++;
+        }
+
+        return response()->json(['message' => 'Se han importado exitosamente ' . $counter . ' usuarios']);
     }
 
 }

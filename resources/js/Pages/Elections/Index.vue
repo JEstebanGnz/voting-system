@@ -14,6 +14,16 @@
                 >
                     Crear nueva elección
                 </v-btn>
+
+                <v-btn
+                    color="red"
+                    class="grey--text text--lighten-4"
+                    @click="manualUpdateDialog = true"
+                >
+                    SOS
+                </v-btn>
+
+
             </div>
         </div>
 
@@ -174,6 +184,53 @@
             </v-card>
         </v-dialog>
 
+
+        <!--Carga masiva de usuarios -->
+        <v-dialog
+            v-model="manualUpdateDialog"
+            persistent
+            max-width="900px"
+        >
+            <v-card>
+                <v-card-title>
+                    <span class="text-h5">Carga/Actualización Manual de Usuarios</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-container>
+                        <v-row>
+                            <v-col cols="12">
+                                <textarea style="width: 100%"
+                                          class="pa-4 shadow-lg elevation-1 my-1"
+                                          v-model="manualUpdateUsersData"
+                                ></textarea>
+                            </v-col>
+
+                        </v-row>
+                    </v-container>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="primario"
+                        text
+                        @click="manualUpdateDialog = false"
+                    >
+                        Cancelar
+                    </v-btn>
+                    <v-btn
+                        color="primario"
+                        text
+                        @click="createMassiveUsers"
+                        :disabled="isProcessing"
+                    >
+                        Agregar usuarios
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+
+
         <!--Confirmar borrar Elección-->
         <confirm-dialog
             :show="deleteElectionDialog"
@@ -242,6 +299,9 @@ export default {
             deletedElectionId : 0,
             deleteElectionDialog: false,
             isLoading: true,
+            manualUpdateDialog: false,
+            manualUpdateUsersData: '',
+            isProcessing: false,
         }
     },
 
@@ -377,6 +437,23 @@ export default {
         handleSelectedMethod: function () {
             this[this.createOrEditDialog.method]();
         },
+
+        createMassiveUsers: async function () {
+            this.isProcessing = true;
+            const data = new FormData();
+            data.append('data', this.manualUpdateUsersData);
+            let url = route('users.manualUpdate');
+            try {
+                let request = await axios.post(url, data);
+                this.manualUpdateDialog= false;
+                showSnackbar(this.snackbar, request.data.message, 'success');
+            } catch (e) {
+                showSnackbar(this.snackbar, e.response.data.message, 'red', 3000);
+                // this.snackbar = displayErrorMessage(prepareErrorText(e));
+            }
+            this.isProcessing = false;
+        },
+
 
     }
 }

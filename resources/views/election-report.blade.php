@@ -79,7 +79,7 @@
         @if($electionData->electionSlots == 1)
             <h2 style="margin-top: 50px"> El miembro elegido es:</h2>
         @else
-            <h2 style="margin-top: 50px"> Los {{$electionData->electionSlots}} miembros elegidos serán:</h2>
+            <h2 style="margin-top: 50px"> Los miembros elegidos serán:</h2>
         @endif
 
 

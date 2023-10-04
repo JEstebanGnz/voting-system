@@ -40,7 +40,7 @@ class UpdateUsersCommand extends Command
      */
     public function handle()
     {
-        $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Respuestas')->get();
+        $sheet = Sheets::spreadsheet(env('POST_SPREADSHEET_ID'))->sheet('Test')->get();
         $header = $sheet->pull(0);
         /*    dd($sheet,$header);*/
         $values = Sheets::collection($header, $sheet);
@@ -57,7 +57,8 @@ class UpdateUsersCommand extends Command
                     ['identification_number' => $user['Número de Identificación']],
                     [
                         'email' => $user['Correo electrónico'],
-                        'name' => $user['Nombre para votación']
+                        'name' => $user['Nombre para votación'],
+                        'external_user' => 0,
                     ]
                 );
             }
@@ -69,7 +70,8 @@ class UpdateUsersCommand extends Command
                     ['identification_number' => $user['Número de Identificación']],
                     [
                         'email' => $user['Correo electrónico'],
-                        'name' => $user['Nombre para votación']
+                        'name' => $user['Nombre para votación'],
+                        'external_user' => 1,
                     ]
                 );
 

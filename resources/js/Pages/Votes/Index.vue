@@ -258,8 +258,6 @@ export default {
             else{
                 await this.judicialAuthorityBeforeVoting();
             }
-
-
         },
 
         async judicialAuthorityBeforeVoting(){
