@@ -73,6 +73,7 @@ class Election extends Model
              $originalSlotsToAssign =$election->max_lines;
              $slotsToAssign = $election->max_lines;
              $votesChecker = 0;
+             $umbralMayorDelEmpate = 99999999;
 
             foreach ($boardsTotal as $boardTotal){
 
