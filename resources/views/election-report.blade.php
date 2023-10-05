@@ -64,16 +64,21 @@
 
         @endforeach
 
-        @foreach($electionData->electionFinalBoards as $election)
+        @if(property_exists($electionData, 'thereWasRandomAssignment'))
+            <span> Debido a que se presentó un empate, de manera aleatoria se asignaron las curules restantes. </span>
+        @endif
 
-            @if(property_exists($election, 'has_tie') && property_exists($election, 'tie_winner'))
 
-                <span> Debido a que se presentó un empate, de manera aleatoria se determinó que a la <strong>{{$election->description}}</strong>
-                    se le asignará la curul restante. </span>
+{{--    @foreach($electionData->electionFinalBoards as $board)--}}
 
-            @endif
+{{--            @if(property_exists($board, 'hadRandomAssignment'))--}}
 
-        @endforeach
+{{--                <span> Debido a que se presentó un empate, de manera aleatoria se determinó que a la <strong>{{$board->description}}</strong>--}}
+{{--                    se le asignará la curul restante. </span>--}}
+
+{{--            @endif--}}
+{{--        --}}
+{{--    @endforeach--}}
 
 
         @if($electionData->electionSlots == 1)
@@ -114,7 +119,6 @@
                 @endif
             @endforeach
             </tbody>
-
         </table>
 
 

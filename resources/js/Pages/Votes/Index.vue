@@ -104,7 +104,7 @@
                     ¡Gracias por votar!
                 </v-card-title>
                 <v-card-text>
-                    Tu voto ha sido registrado exitosamente
+                    Tu voto por la <strong>{{this.selectedVotingOption.description}} </strong>ha sido registrado exitosamente
                 </v-card-text>
                 <v-card-actions class="d-flex justify-end">
                     <v-btn
