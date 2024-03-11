@@ -5,39 +5,76 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
     //
 
-    public function handleRoleRedirect()
-    {
-
-    }
-
     public function redirectGoogleLogin()
     {
         return Socialite::driver('google')->redirect();
     }
 
-    public function handleGoogleCallback()
+
+
+    public function loginValidation(Request $request)
     {
-        $googleUser = Socialite::driver('google')->user();
+        //Error messages
+        $messages = [
+            "email.required" => "El correo es obligatorio",
+            "email.email" => "Formato de correo incorrecto",
+            "email.exists" => "El correo ingresado no se encuentra en la base de datos",
+            "password.required" => "Se requiere la contraseña para ingresar",
+        ];
 
-        $user = User::where('email', $googleUser->email)->first();
+        // validate the form data
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ], $messages);
 
-        if (!$user) {
-            $user = User::create([
-                'name' => $googleUser->name,
-                'email' => $googleUser->email,
-                'google_id' => $googleUser->id,
-                'password' => 'automatic_generate_password'
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        } else {
+            // attempt to log
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password ])) {
+                // if successful -> redirect to roleRedirect
+                return redirect()->intended(route('role.redirect'));
+            }
+
+            // if unsuccessful -> redirect back
+            return redirect()->back()->withInput($request->only('email'))->withErrors([
+                'approve' => 'Contraseña incorrecta, recuerda que es tu número de identificación',
             ]);
         }
-
-        Auth::login($user, true);
-
-        return redirect()->route('landing');
     }
+
+
+    public function handleRoleRedirect()
+    {
+        $user = auth()->user();
+        if ($user->role_id === 1) {
+            return Inertia::render('Votes/Index');
+        }
+        return Inertia::render('Elections/Index');
+    }
+
+
+    public function testLoginValidation(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->route('tests.index.view');
+        }
+        return back()->withErrors([
+            'email' => 'Correo o contraseñas incorrectas, inténtelo nuevamente.',
+        ]);
+    }
+
 }

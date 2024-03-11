@@ -19,17 +19,16 @@ use Revolution\Google\Sheets\Facades\Sheets;
 |
 */
 
-Route::get('/', function () {
+/*Route::get('/', function () {
 
     $user = auth()->user();
 
     if ($user->role_id === 1) {
-
         return redirect()->route('votes.index.view');
     }
 
     return redirect()->route('elections.index.view');
-})->middleware(['auth']);
+})->middleware(['auth']);*/
 
 /* >>>>>Roles routes <<<<<< */
 
@@ -68,6 +67,13 @@ Route::get('landing', function () {
 //Route::get('/google/callback', [\App\Http\Controllers\AuthController::class, 'handleGoogleCallback']);
 
 Route::inertia('/login', 'Custom/CustomLogin')->name('login');
+Route::post('/loginValidation', [\App\Http\Controllers\AuthController::class, 'loginValidation'])->name('login.validation');
+Route::get('/', [\App\Http\Controllers\AuthController::class, 'handleRoleRedirect'])->middleware(['auth'])->name('role.redirect');
+
+
+
+
+
 /* >>>>>Elections routes <<<<<< */
 Route::inertia('/elections', 'Elections/Index')->middleware(['auth', 'isAdmin'])->name('elections.index.view');
 Route::resource('api/elections', \App\Http\Controllers\ElectionController::class, [

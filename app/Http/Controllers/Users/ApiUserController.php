@@ -80,26 +80,32 @@ class ApiUserController extends Controller
         return response()->json($finalUsers);
     }
 
-    public function manualUpdate(Request $request)
-    {
 
-        //Get all rows
-        $rows = explode("\r\n", $request->input('data'));
-
+/*
         //Parse the name and email
         foreach ($rows as $key => $row) {
             try {
-                [$name, $email, $monitoringType] = explode("\t", $row);
+
+                [$registro, $identificacion, $nombre, $email, $direccion,
+                    $telefono, $catAsociado, $aporte, $medioPago, $tipoIdentificacion, $name, $asistio, $apoderadoExterno, $poder,
+                    $pago, $monto, $control,$rubbish, $lorepresenta, $cedula] = explode(",", $row);
+
             } catch (\Exception $e) {
                 $message = 'Has ingresado los datos de manera incorrecta, lo que produjo el siguiente error en el servidor: ' . $e->getMessage();
                 return response()->json(['message' => $message], 400);
             }
             $rows[$key] = [
-                'name' => $name,
-                'email' => $email,
-                'monitoringType' => $monitoringType,
+                'Nombre para votación' => $name,
+                'Correo Electrónico' => $email,
+                'Número de Identificación' => $identificacion,
+                'Asistió' => $asistio,
+                'Apoderado externo' => $apoderadoExterno,
+                'Poder' => $poder,
+                'Pago' => $pago
             ];
         }
+
+        dd($rows);
 
         //Now, lets filter a detect if there are errors
 
@@ -139,9 +145,9 @@ class ApiUserController extends Controller
             );
 
             $counter++;
-        }
+        }*/
 
-        return response()->json(['message' => 'Se han importado exitosamente ' . $counter . ' usuarios']);
-    }
+//        return response()->json(['message' => 'Se han importado exitosamente ' . $counter . ' usuarios']);
+
 
 }
