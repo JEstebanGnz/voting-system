@@ -33,11 +33,11 @@ class ApiUserController extends Controller
     public function getSuitableUsersToAdd()
     {
 
-        $allUsers = DB::table('users as u')->where('has_payment', '=', 1)
+        $allUsers = DB::table('users as u')->where('can_vote', '=', 1)
             ->where('external_user', '=', false)->orderBy('name', 'ASC')->get();
         $users = [];
-        foreach($allUsers as $user){
 
+        foreach($allUsers as $user){
             $userIsAlreadyOnElection = DB::table('board_members as bm')->where('head_id', '=', $user->id)
                 ->orWhere('substitute_id', '=', $user->id)->first();
             if(!$userIsAlreadyOnElection){
@@ -49,22 +49,19 @@ class ApiUserController extends Controller
 
     public function judicialAuthorityUsersBeforeVoting(User $user)
     {
-
         $delegatedUsers = DB::table('user_judicial_authority as uja')->where('uja.authority_id', '=', $user->id)
             ->join('users as u', 'u.id','=','uja.user_id')
-            ->where('u.has_payment', '=', 1)->select(['u.id', 'u.name'])
+            ->where('u.can_vote', '=', 1)->select(['u.id', 'u.name'])
             ->get();
-
         return response()->json($delegatedUsers);
     }
 
 
     public function judicialAuthorityUsers(User $user, Election $election)
     {
-
         $delegatedUsers = DB::table('user_judicial_authority as uja')->where('uja.authority_id', '=', $user->id)
             ->join('users as u', 'u.id','=','uja.user_id')
-            ->where('u.has_payment', '=', 1)->select(['u.id', 'u.name'])
+            ->where('u.can_vote', '=', 1)->select(['u.id', 'u.name'])
             ->get();
 
         $finalUsers = [];

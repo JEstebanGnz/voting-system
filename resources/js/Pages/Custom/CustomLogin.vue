@@ -5,8 +5,9 @@
                 <v-layout align-center justify-center>
                     <v-flex xs12 sm8 md4>
                         <v-card class="elevation-12">
-                            <v-toolbar dark color="primary">
-                                <v-toolbar-title>Cooperativa Uni2</v-toolbar-title>
+                            <v-toolbar dark color="light-green">
+                                    <img src="/images/uni2.jpg"
+                                         style="max-height: 60px; max-width:270px; object-fit: contain; border-radius: 5% ; margin: 0 auto">
                             </v-toolbar>
                             <v-card-text>
                                 <form @submit.prevent="submit">
@@ -36,7 +37,7 @@
                                     <div v-if="form.errors.approve" class="text-red-500 text-xs mt-1" style="color: red">
                                         {{form.errors.approve}}
                                     </div>
-                                    <v-btn type="submit" class="mt-4" color="primary" value="log in">Ingresar</v-btn>
+                                    <v-btn type="submit" class="mt-4 white--text" color="#FF6D00" value="log in" >Ingresar</v-btn>
                                 </form>
                             </v-card-text>
                         </v-card>

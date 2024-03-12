@@ -36,8 +36,8 @@
                     :items-per-page="15"
                     class="elevation-1"
                 >
-                    <template v-slot:item.has_payment="{item}">
-                        {{ item.has_payment === 1 ? 'Sí' : 'No' }}
+                    <template v-slot:item.can_vote="{item}">
+                        {{ item.can_vote === 1 ? 'Sí' : 'No' }}
                     </template>
                 </v-data-table>
                 <!--Acaba tabla-->
@@ -65,7 +65,7 @@ export default {
                 {text: 'Nombre', value: 'name'},
                 {text: 'Correo electrónico', value: 'email'},
                 {text: 'C.C', value: 'identification_number'},
-                {text: 'Pagó?', value: 'has_payment'},
+                {text: 'Voto habilitado', value: 'can_vote'},
             ],
             users: [],
             //Snackbars

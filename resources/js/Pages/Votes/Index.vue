@@ -22,8 +22,8 @@
                             <v-card outlined>
                                 <v-card-title>
                                 <div v-for="(votingOptionLine, key) in votingOption.lines" id="content">
-                                    <p class="grey--text"> <strong class="black--text"> Titular: </strong> {{votingOptionLine.head_name}} <br>
-                                        <strong class="black--text"> Suplente:  </strong> {{votingOptionLine.substitute_name}}</p>
+                                    <p class="grey--text"> <strong class="black--text"> Presidente: </strong> {{votingOptionLine.head_name}} <br>
+                                        <strong class="black--text"> Secretario:  </strong> {{votingOptionLine.substitute_name}}</p>
                                 </div>
                                 </v-card-title>
                                 <v-card-actions class="d-flex justify-center mb-2">
@@ -249,12 +249,14 @@ export default {
             console.log(request.data);
             this.election = request.data;
 
+            //Si ya hay una elección activa, traemos a todos los usuarios que la persona representará
             if(this.election !== ""){
                 await this.judicialAuthorityUsers();
                 await this.isAbleToVote();
                 this.votingOptions = this.election.boards;
             }
 
+            //Si en el momento no hay una elección activa, simplemente traemos la información de los afiliados a los que la persona representará
             else{
                 await this.judicialAuthorityBeforeVoting();
             }
@@ -265,8 +267,9 @@ export default {
             let request = await axios.get(route('judicialA.users.bVoting',
                 {user:this.$page.props.user}))
             console.log(request.data);
-            this.onRepresentationUsersBeforeVoting = request.data;
 
+            //Aquí almacenamos a esos usuarios por los que la persona con poder puede votar
+            this.onRepresentationUsersBeforeVoting = request.data;
         },
 
         selectVotingOption: function (votingOption) {
@@ -326,6 +329,7 @@ export default {
 
         async checkCurrentStatus(){
             await this.checkCurrentUserInfo();
+            this.selectedVotingOption = '';
             this.showDialog = false;
             window. scrollTo({ top: 0, left: 0});
 

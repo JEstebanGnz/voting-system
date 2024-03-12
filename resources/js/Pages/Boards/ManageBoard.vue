@@ -145,7 +145,7 @@
                                         color="primario"
                                         v-model="currentEditingHead"
                                         :items="editSuitableUsersToBeElected"
-                                        label="Titular"
+                                        label="Presidente"
                                         :item-text="(p)=>p.name"
                                         :item-value="(p)=>p"
                                     >
@@ -159,7 +159,7 @@
                                         color="primario"
                                         v-model="currentEditingSubstitute"
                                         :items="editSuitableUsersToBeElected"
-                                        label="Suplente"
+                                        label="Secretario"
                                         :item-text="(p)=>p.name"
                                         :item-value="(p)=>p"
                                     >
@@ -283,8 +283,8 @@ export default {
 
             headers:[
                 {text: 'Posición', value: 'priority', align: 'center'},
-                {text: 'Titular', value: 'head_name'},
-                {text: 'Suplente', value: 'substitute_name'},
+                {text: 'Presidente', value: 'head_name'},
+                {text: 'Secretario', value: 'substitute_name'},
                 {text: 'Acciones', value: 'actions', sortable:false}
             ],
 

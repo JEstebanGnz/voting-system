@@ -14,16 +14,13 @@
                 >
                     Crear nueva elección
                 </v-btn>
-
-                <v-btn
+<!--                <v-btn
                     color="red"
-                    class="grey--text text--lighten-4"
+                    class="grey&#45;&#45;text text&#45;&#45;lighten-4"
                     @click="manualUpdateDialog = true"
                 >
                     SOS
-                </v-btn>
-
-
+                </v-btn>-->
             </div>
         </div>
 
@@ -317,7 +314,7 @@ export default {
         },
 
         openElectionResults(election){
-            window.open(route('elections.report', {election:election}));
+            window.open(route('elections.report', {election:election.id}));
         },
 
         setElectionAsActive: async function (electionId){
@@ -371,13 +368,10 @@ export default {
                 showSnackbar(this.snackbar, 'Debes diligenciar todos los campos obligatorios', 'red', 2000);
                 return;
             }
-
             let data = this.newElection.toObjectRequest();
             this.newElection = new Election();
 
             console.log(this.newElection);
-
-
             try{
                 let request = await axios.post(route('api.elections.store'), data);
                 this.createOrEditDialog.dialogStatus = false;
@@ -413,10 +407,8 @@ export default {
         },
 
         confirmDeleteElection: async function (election){
-
             this.deletedElectionId = election.id
             this.deleteElectionDialog = true;
-
         },
 
         deleteElection: async function (electionId) {

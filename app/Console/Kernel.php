@@ -24,8 +24,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('users:insert')->withoutOverlapping();
-        $schedule->command('users:update')->withoutOverlapping();
+/*        $schedule->command('users:insert')->withoutOverlapping();
+        $schedule->command('users:update')->withoutOverlapping();*/
+        $schedule->command('createOrUpdate:users')->withoutOverlapping();
     }
 
     /**

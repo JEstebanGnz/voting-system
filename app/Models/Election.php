@@ -35,11 +35,8 @@ class Election extends Model
         $activeElection = self::where('is_active', '=', 1)->with('boards')->first();
 
         if ($activeElection){
-
             $boards = $activeElection->boards;
-
             foreach ($boards as $board){
-
                 $lines = DB::table('board_members as bm')->where('board_id', '=', $board->id)
                     ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
                     ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
@@ -49,27 +46,36 @@ class Election extends Model
                 if(count($lines) === 0){
                     continue;
                 }
-
                 $board['lines'] = $lines;
-
             }
-
             return response()->json($activeElection);
         }
-
         return null;
     }
 
     public function getVotingReport($election)
     {
-             $boardsTotal = DB::table('votes as v')->select(['v.board_id', 'b.description', DB::raw('COUNT(*) AS total_votes')])
+             $boards = DB::table('votes as v')->select(['v.board_id', 'b.description', DB::raw('COUNT(*) AS total_votes')])
             ->where('v.election_id', '=', $this->id)->join('users as u', 'v.user_id', '=', 'u.id')
             ->join('boards as b', 'v.board_id', '=','b.id')
-            ->where('u.has_payment','=',true)
+            ->where('u.can_vote','=',true)
             ->groupBy('b.description', 'v.board_id')
-            ->orderByRaw('(total_votes) desc')->get();
+            ->orderByRaw('(total_votes) desc')->get()->toArray();
 
-             $totalElectionVotes = 0;
+             foreach ($boards as $board){
+                 $membersToAssignToBoard = DB::table('board_members as bm')->where('bm.board_id', '=', $board->board_id)
+                     ->leftJoin('users as a', 'a.id', '=', 'bm.head_id')
+                     ->leftJoin('users as b', 'b.id', '=', 'bm.substitute_id')
+                     ->select('bm.*', 'a.name as head_name', 'b.name as substitute_name')
+                     ->orderBy('priority', 'ASC')->take(1)->first();
+
+                 $board->members = $membersToAssignToBoard;
+             }
+
+             return $boards;
+
+
+   /*          $totalElectionVotes = 0;
              $originalSlotsToAssign =$election->max_lines;
              $slotsToAssign = $election->max_lines;
              $votesChecker = 0;
@@ -542,7 +548,7 @@ class Election extends Model
 
 //        dd($electionFinalData);
 
-        return $electionFinalData;
+        return $electionFinalData;*/
 
     }
 

@@ -28,8 +28,10 @@ class ElectionController extends Controller
 
         try {
             $active = Election::getActiveElection();
-            $active->is_active = false;
-            $active->save();
+            if($active){
+                $active->is_active = false;
+                $active->save();
+            }
         } catch (\Exception $e) {
         } finally {
             $election->is_active = true;
@@ -69,7 +71,9 @@ class ElectionController extends Controller
         $electionData = $election->getVotingReport($election);
         $electionName = $election->name;
 
-        return Pdf::loadView('election-report', compact('electionData', 'electionName'))
+        /*dd($electionData);*/
+
+        return Pdf::loadView('election-report-single', compact('electionData', 'electionName'))
             ->stream("Reporte para la elección $electionName.pdf");
     }
 
