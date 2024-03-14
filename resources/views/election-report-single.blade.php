@@ -63,18 +63,25 @@
             @endforeach
             </tbody>
         </table>
-
-        <p>
-            El ganador de la elección es la {{$electionData[0]->description}} con {{$electionData[0]->total_votes}} votos en total.
-        </p>
-
-
-    @else
-        <h2 style="text-align: center">
-            No hay votos registrados en esta elección
-        </h2>
-
     @endif
+
+        @if (!$isTie && count($electionData) > 0)
+        <h2 style="text-align: center">
+            El ganador de la elección es la {{$electionData[0]->description}} con {{$electionData[0]->total_votes}} votos en total.
+        </h2>
+          @endif
+
+        @if ($isTie)
+        <h2 style="text-align: center">
+            Se ha presentado un empate en la votación.
+        </h2>
+        @endif
+
+        @if (count($electionData) === 0)
+        <h2 style="text-align: center">
+            No hay votos registrados en esta elección.
+        </h2>
+        @endif
 
     <p>
         Este reporte ha sido generado por el Sistema de Votaciones el {{\Carbon\Carbon::now()->toDateTimeString()}}.

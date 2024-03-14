@@ -70,12 +70,37 @@ class ElectionController extends Controller
     {
         $electionData = $election->getVotingReport($election);
         $electionName = $election->name;
+        $isTie = false;
 
-        /*dd($electionData);*/
+        if(count($electionData) > 0){
+            $isTie = $this->isTie($electionData);
+        }
 
-        return Pdf::loadView('election-report-single', compact('electionData', 'electionName'))
+        return Pdf::loadView('election-report-single', compact('electionData', 'electionName', 'isTie'))
             ->stream("Reporte para la elección $electionName.pdf");
     }
+
+
+    function isTie($boards) {
+
+        $maxBoard = $boards[0];
+        $maxVotes = $maxBoard->total_votes;
+        $boardName = $maxBoard->description;
+        $isTie = false;
+//        dd($boardName);
+
+        foreach ($boards as $board) {
+            if ($board->total_votes === $maxVotes && $board->description !== $boardName) {
+                $isTie = true;
+                break;
+            }
+        }
+
+        return $isTie;
+    }
+
+
+
 
     /**
      * Show the form for creating a new resource.
