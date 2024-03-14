@@ -49,10 +49,10 @@ class CreateOrUpdateUsersCommand extends Command
         $users = array_values($values->toArray());
 
         foreach ($users as $user) {
-
             try{
+                if($user['Número de Identificación'] !== "" && $user['Correo electrónico'] !== ""){
                 //Si es un afiliado que se encuentra al día
-                if($user['Voto'] === "1" && $user['Apoderado externo'] === ""){
+                    if($user['Voto'] === "1" && $user['Apoderado externo'] === ""){
 
                     $voter = \App\Models\User::firstOrCreate
                     (
@@ -172,14 +172,12 @@ class CreateOrUpdateUsersCommand extends Command
                         ]
                     );
                 }
+            }
             } catch (\Exception $exception){
                 continue;
             }
         }
-
         Log::info('Users updated/created correctly');
-
-
         return 0;
     }
 }
